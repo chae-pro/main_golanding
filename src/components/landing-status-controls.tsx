@@ -44,23 +44,12 @@ export function LandingStatusControls({
         <button
           className="ghost-button"
           disabled={isPending}
-          onClick={() => changeStatus("draft")}
-          type="button"
-        >
-          {isPending ? "저장 중..." : "초안으로 변경"}
-        </button>
-      )}
-
-      {currentStatus !== "archived" ? (
-        <button
-          className="ghost-button"
-          disabled={isPending}
           onClick={() => changeStatus("archived")}
           type="button"
         >
-          {isPending ? "저장 중..." : "보관하기"}
+          {isPending ? "저장 중..." : "사용중지"}
         </button>
-      ) : null}
+      )}
     </div>
   );
 }

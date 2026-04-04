@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { LandingStatusControls } from "@/components/landing-status-controls";
-import { getLandingMetrics } from "@/server/analytics-service";
 import { getLandingById } from "@/server/landing-service";
 import { getCurrentCreatorSession } from "@/server/session-auth";
 
@@ -17,13 +16,10 @@ function getLandingTypeLabel(type: "button" | "form" | "html") {
 }
 
 function getLandingStatusLabel(status: "draft" | "published" | "archived") {
-  if (status === "draft") {
-    return "초안";
-  }
   if (status === "published") {
     return "발행중";
   }
-  return "보관중";
+  return "사용중지";
 }
 
 type LandingDetailPageProps = {
@@ -39,7 +35,6 @@ export default async function LandingDetailPage({ params }: LandingDetailPagePro
 
   const { landingId } = await params;
   const landing = await getLandingById(landingId);
-  const metrics = landing ? await getLandingMetrics(landing.id) : null;
 
   if (!landing) {
     notFound();
@@ -94,18 +89,6 @@ export default async function LandingDetailPage({ params }: LandingDetailPagePro
         <div className="detail-card">
           <strong>{landing.publicSlug}</strong>
           <p>공개 슬러그</p>
-        </div>
-        <div className="detail-card">
-          <strong>{metrics?.visitorCount ?? 0}</strong>
-          <p>방문자</p>
-        </div>
-        <div className="detail-card">
-          <strong>{landing.images.length}</strong>
-          <p>이미지 수</p>
-        </div>
-        <div className="detail-card">
-          <strong>{landing.buttons.length}</strong>
-          <p>버튼 수</p>
         </div>
       </div>
 
