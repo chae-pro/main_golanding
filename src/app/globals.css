@@ -555,7 +555,7 @@ textarea {
 
 .scroll-map-row {
   display: grid;
-  grid-template-columns: 100px 1fr 120px;
+  grid-template-columns: 100px 1fr 170px;
   gap: 12px;
   align-items: center;
 }
@@ -574,13 +574,26 @@ textarea {
 }
 
 .scroll-map-meta {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
+  display: grid;
+  grid-template-columns: 40px minmax(68px, auto);
+  gap: 4px 10px;
+  justify-content: end;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: rgba(248, 250, 252, 0.92);
+  border: 1px solid rgba(15, 23, 42, 0.08);
 }
 
-.scroll-map-meta span {
+.scroll-map-meta-label {
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.scroll-map-meta-value {
+  text-align: right;
   font-weight: 800;
   font-size: 1rem;
   line-height: 1.2;

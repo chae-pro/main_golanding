@@ -16,15 +16,16 @@ function getHeatmapPointClass(targetType: "page" | "cta" | "form") {
 
 function getDwellOverlayStyle(value: number, index: number) {
   const normalized = Math.min(Math.max(value / 100, 0), 1);
-  const opacity = normalized > 0 ? 0.2 + normalized * 0.62 : 0.08;
+  const opacity = normalized > 0 ? 0.28 + normalized * 0.68 : 0.1;
 
   return {
     top: `${(index / 20) * 100}%`,
     height: `${100 / 20}%`,
-    background: `linear-gradient(90deg, rgba(220, 38, 38, ${opacity}), rgba(249, 115, 22, ${Math.max(
-      opacity * 0.86,
-      0.1,
-    )}))`,
+    background: `linear-gradient(90deg,
+      rgba(220, 38, 38, ${opacity}),
+      rgba(249, 115, 22, ${Math.max(opacity * 0.92, 0.16)}) 62%,
+      rgba(251, 146, 60, ${Math.max(opacity * 0.82, 0.14)}) 100%)`,
+    boxShadow: `inset 0 0 0 1px rgba(255, 255, 255, ${Math.max(opacity * 0.18, 0.06)})`,
   };
 }
 
@@ -101,8 +102,10 @@ export function AnalysisVisuals({
                 <div className="scroll-map-fill" style={{ width: `${section.reachRate}%` }} />
               </div>
               <div className="scroll-map-meta">
-                <span>{section.reachRate}%</span>
-                <span>{formatSeconds(section.avgDwellSeconds)}</span>
+                <span className="scroll-map-meta-label">비율</span>
+                <span className="scroll-map-meta-value">{section.reachRate}%</span>
+                <span className="scroll-map-meta-label">시간</span>
+                <span className="scroll-map-meta-value">{formatSeconds(section.avgDwellSeconds)}</span>
               </div>
             </div>
           ))}
