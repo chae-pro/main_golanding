@@ -21,9 +21,9 @@ function getLandingStatusLabel(status: "draft" | "published" | "archived") {
     return "초안";
   }
   if (status === "published") {
-    return "발행중";
+    return "사용 중";
   }
-  return "보관됨";
+  return "사용중지";
 }
 
 export default async function HomePage() {

@@ -47,6 +47,28 @@ function sortByOrder<T extends { sortOrder: number }>(items: T[]) {
   return [...items].sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
+async function isPublicSlugTaken(publicSlug: string) {
+  const db = await getDb();
+  const exists = await db.one<{ id: string }>(
+    "SELECT id FROM landings WHERE public_slug = ? LIMIT 1",
+    [publicSlug],
+  );
+
+  return Boolean(exists);
+}
+
+async function ensureUniquePublicSlug(baseSlug: string) {
+  let candidate = `${baseSlug}-copy`;
+  let index = 2;
+
+  while (await isPublicSlugTaken(candidate)) {
+    candidate = `${baseSlug}-copy-${index}`;
+    index += 1;
+  }
+
+  return candidate;
+}
+
 async function getLandingImages(landingId: string): Promise<LandingImage[]> {
   const db = await getDb();
   const rows = await db.many<{
@@ -227,15 +249,11 @@ export async function getLandingByPublicSlug(publicSlug: string) {
 
 export async function createLanding(input: LandingCreateInput) {
   const now = new Date().toISOString();
-  const db = await getDb();
-  const exists = await db.one<{ id: string }>(
-    "SELECT id FROM landings WHERE public_slug = ? LIMIT 1",
-    [input.publicSlug],
-  );
-
-  if (exists) {
+  if (await isPublicSlugTaken(input.publicSlug)) {
     throw new Error("PUBLIC_SLUG_ALREADY_EXISTS");
   }
+
+  const db = await getDb();
 
   const landingId = randomUUID();
   const images = sortByOrder(input.images);
@@ -307,6 +325,46 @@ export async function createLanding(input: LandingCreateInput) {
   });
 
   return getLandingById(landingId) as Promise<Landing>;
+}
+
+export async function duplicateLanding(input: { landingId: string; ownerEmail: string }) {
+  const source = await getLandingById(input.landingId);
+
+  if (!source) {
+    throw new Error("LANDING_NOT_FOUND");
+  }
+
+  if (source.ownerEmail.toLowerCase() !== input.ownerEmail.toLowerCase()) {
+    throw new Error("FORBIDDEN");
+  }
+
+  const duplicated = await createLanding({
+    ownerEmail: input.ownerEmail,
+    type: source.type,
+    title: `${source.title} 복사본`,
+    publicSlug: await ensureUniquePublicSlug(source.publicSlug),
+    description: source.description,
+    theme: source.theme,
+    images: source.images.map((image) => ({
+      ...image,
+      id: randomUUID(),
+    })),
+    buttons: source.buttons.map((button) => ({
+      ...button,
+      id: randomUUID(),
+    })),
+    formFields: source.formFields.map((field) => ({
+      ...field,
+      id: randomUUID(),
+    })),
+    htmlSource: source.htmlSource,
+  });
+
+  return updateLandingStatus({
+    landingId: duplicated.id,
+    ownerEmail: input.ownerEmail,
+    status: "archived",
+  });
 }
 
 export async function updateLandingStatus(input: {
