@@ -16,7 +16,9 @@ type DashboardLandingRow = {
 };
 
 export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }) {
+  const [rows, setRows] = useState(items);
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
+  const [pendingId, setPendingId] = useState<string | null>(null);
 
   async function copyPublicLink(publicSlug: string) {
     const url = `${window.location.origin}/l/${publicSlug}`;
@@ -27,15 +29,62 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
     }, 1800);
   }
 
+  async function toggleLandingStatus(row: DashboardLandingRow) {
+    const nextStatus = row.isPublished ? "archived" : "published";
+    setPendingId(row.id);
+
+    try {
+      const response = await fetch(`/api/landings/${row.id}`, {
+        method: "PATCH",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          status: nextStatus,
+        }),
+      });
+
+      const result = (await response.json()) as {
+        landing?: {
+          status: "draft" | "published" | "archived";
+        };
+        message?: string;
+      };
+
+      if (!response.ok || !result.landing) {
+        throw new Error(result.message ?? "상태 변경에 실패했습니다.");
+      }
+
+      setRows((current) =>
+        current.map((item) =>
+          item.id === row.id
+            ? {
+                ...item,
+                isPublished: result.landing?.status === "published",
+                statusLabel:
+                  result.landing?.status === "published"
+                    ? "발행중"
+                    : result.landing?.status === "archived"
+                      ? "사용중지"
+                      : "초안",
+              }
+            : item,
+        ),
+      );
+    } finally {
+      setPendingId(null);
+    }
+  }
+
   return (
     <div className="dashboard-landing-list">
-      {items.map((item) => (
+      {rows.map((item) => (
         <article className="dashboard-landing-bar" key={item.id}>
           <Link className="dashboard-landing-title" href={`/landings/${item.id}`}>
             {item.title}
           </Link>
 
-          <div className="dashboard-landing-info">랜딩형식 - {item.typeLabel}</div>
+          <div className="dashboard-landing-info">{item.typeLabel}</div>
 
           <div className="dashboard-landing-info">
             방문자 <strong>{item.visitorCount}</strong>
@@ -62,13 +111,25 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
             분석
           </Link>
 
-          <div
+          <button
             className={`dashboard-status-toggle ${
               item.isPublished ? "dashboard-status-toggle-on" : "dashboard-status-toggle-off"
             }`}
+            disabled={pendingId === item.id}
+            onClick={() => void toggleLandingStatus(item)}
+            type="button"
           >
             <span className="dashboard-status-track" />
-            <strong>{item.isPublished ? "사용 중" : item.statusLabel}</strong>
+            <strong>
+              {pendingId === item.id ? "변경 중" : item.isPublished ? "사용 중" : "사용중지"}
+            </strong>
+          </button>
+
+          <div
+            className="dashboard-landing-status-label"
+            aria-hidden="true"
+          >
+            {item.isPublished ? "발행중" : item.statusLabel}
           </div>
         </article>
       ))}
