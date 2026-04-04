@@ -25,6 +25,34 @@ function getRankOpacity(rank: number, total: number, hasPositiveValue: boolean) 
   return 0.08 + normalized * 0.42;
 }
 
+function getRankMix(rank: number, total: number, hasPositiveValue: boolean) {
+  if (!hasPositiveValue) {
+    return 0;
+  }
+
+  const clampedTotal = Math.max(total, 1);
+
+  if (clampedTotal === 1) {
+    return 1;
+  }
+
+  return (clampedTotal - rank) / (clampedTotal - 1);
+}
+
+function mixChannel(from: number, to: number, ratio: number) {
+  return Math.round(from + (to - from) * ratio);
+}
+
+function getRankColor(rank: number, total: number, hasPositiveValue: boolean) {
+  const mix = getRankMix(rank, total, hasPositiveValue);
+
+  return {
+    red: mixChannel(255, 178, mix),
+    green: mixChannel(255, 14, mix),
+    blue: mixChannel(255, 4, mix),
+  };
+}
+
 function getDwellRanks(values: number[]) {
   const sorted = [...values].sort((left, right) => right - left);
 
@@ -44,25 +72,27 @@ function getDwellRanks(values: number[]) {
 
 function getDwellOverlayStyle(rank: number, total: number, hasPositiveValue: boolean, index: number) {
   const opacity = getRankOpacity(rank, total, hasPositiveValue);
+  const color = getRankColor(rank, total, hasPositiveValue);
 
   return {
     top: `${(index / 20) * 100}%`,
     height: `${100 / 20}%`,
     background: `linear-gradient(90deg,
-      rgba(185, 28, 28, ${opacity}),
-      rgba(220, 38, 38, ${Math.max(opacity * 0.88, 0.28)}) 62%,
-      rgba(239, 68, 68, ${Math.max(opacity * 0.7, 0.2)}) 100%)`,
+      rgba(${color.red}, ${color.green}, ${color.blue}, ${opacity}),
+      rgba(${color.red}, ${color.green}, ${color.blue}, ${Math.max(opacity * 0.82, 0.14)}) 62%,
+      rgba(${color.red}, ${color.green}, ${color.blue}, ${Math.max(opacity * 0.62, 0.1)}) 100%)`,
     boxShadow: `inset 0 0 0 1px rgba(255, 255, 255, ${Math.max(opacity * 0.22, 0.08)})`,
   };
 }
 
 function getDwellSummaryStyle(rank: number, total: number, hasPositiveValue: boolean) {
   const opacity = getRankOpacity(rank, total, hasPositiveValue);
+  const color = getRankColor(rank, total, hasPositiveValue);
 
   return {
     background: `linear-gradient(135deg,
-      rgba(252, 165, 165, ${Math.max(opacity * 0.95, 0.22)}),
-      rgba(220, 38, 38, ${Math.max(opacity * 0.9, 0.2)}))`,
+      rgba(255, 255, 255, ${Math.max(opacity * 0.72, 0.16)}),
+      rgba(${color.red}, ${color.green}, ${color.blue}, ${Math.max(opacity * 0.92, 0.18)}))`,
     borderColor: `rgba(255, 255, 255, ${Math.max(opacity * 0.58, 0.2)})`,
   };
 }
