@@ -143,14 +143,17 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
             {item.title}
           </Link>
 
-          <div className="dashboard-landing-info dashboard-landing-info-centered">{item.typeLabel}</div>
+          <div className="dashboard-landing-info">{item.typeLabel}</div>
 
-          <div className="dashboard-landing-info dashboard-landing-info-centered">
-            방문자 <strong>{item.visitorCount}</strong>
-          </div>
-
-          <div className="dashboard-landing-info dashboard-landing-info-centered">
-            클릭수 <strong>{item.clickCount}</strong>
+          <div className="dashboard-landing-metrics">
+            <div className="dashboard-landing-metric">
+              <span>방문자</span>
+              <strong>{item.visitorCount}</strong>
+            </div>
+            <div className="dashboard-landing-metric">
+              <span>클릭수</span>
+              <strong>{item.clickCount}</strong>
+            </div>
           </div>
 
           <button

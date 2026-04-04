@@ -219,7 +219,7 @@ textarea {
 
 .dashboard-landing-bar {
   display: grid;
-  grid-template-columns: minmax(300px, 1.8fr) minmax(180px, 0.95fr) minmax(120px, auto) minmax(120px, auto) auto auto auto auto auto;
+  grid-template-columns: minmax(300px, 1.8fr) minmax(180px, 0.95fr) minmax(250px, 0.95fr) auto auto auto auto auto;
   gap: 18px;
   align-items: center;
   padding: 16px 20px;
@@ -244,13 +244,33 @@ textarea {
   white-space: nowrap;
 }
 
-.dashboard-landing-info-centered {
-  text-align: center;
-  justify-self: center;
-}
-
 .dashboard-landing-info strong {
   font-size: 1.2rem;
+}
+
+.dashboard-landing-metrics {
+  display: grid;
+  grid-template-columns: minmax(110px, 1fr) minmax(110px, 1fr);
+  gap: 18px;
+  align-items: center;
+}
+
+.dashboard-landing-metric {
+  display: grid;
+  grid-template-columns: auto minmax(36px, auto);
+  gap: 10px;
+  align-items: center;
+  justify-content: start;
+  white-space: nowrap;
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: #07111f;
+}
+
+.dashboard-landing-metric strong {
+  min-width: 36px;
+  font-size: 1.2rem;
+  text-align: right;
 }
 
 .dashboard-inline-button {
