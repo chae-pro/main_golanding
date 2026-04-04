@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { AppHeader } from "@/components/app-header";
 import { isAdminEmail } from "@/server/admin-auth";
-import { getCurrentCreatorSession } from "@/server/session-auth";
+import { getCurrentCreatorSessionSnapshot } from "@/server/session-auth";
 
 import "./globals.css";
 
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const auth = await getCurrentCreatorSession();
+  const auth = await getCurrentCreatorSessionSnapshot();
   const isAdmin = auth ? isAdminEmail(auth.session.email) : false;
 
   return (

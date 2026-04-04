@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 import { SessionActions } from "@/components/session-actions";
 
@@ -13,6 +14,24 @@ export function AppHeader({
   isAdmin: boolean;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    router.prefetch("/");
+
+    if (!email) {
+      router.prefetch("/login");
+      router.prefetch("/signup");
+      return;
+    }
+
+    router.prefetch("/landings/new");
+
+    if (isAdmin) {
+      router.prefetch("/admin/accounts");
+      router.prefetch("/admin/members");
+    }
+  }, [email, isAdmin, router]);
 
   if (pathname.startsWith("/l/")) {
     return null;

@@ -598,6 +598,71 @@ textarea {
   color: var(--error);
 }
 
+.loading-panel {
+  overflow: hidden;
+}
+
+.loading-row {
+  pointer-events: none;
+}
+
+.loading-line,
+.loading-pill {
+  position: relative;
+  overflow: hidden;
+  background: rgba(226, 232, 240, 0.8);
+}
+
+.loading-line::after,
+.loading-pill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.72) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: loading-shimmer 1.2s ease-in-out infinite;
+}
+
+.loading-line {
+  height: 16px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+}
+
+.loading-line-short {
+  width: 120px;
+}
+
+.loading-line-medium {
+  width: 240px;
+}
+
+.loading-line-title {
+  width: min(420px, 100%);
+  height: 28px;
+}
+
+.loading-pill {
+  width: 110px;
+  height: 44px;
+  border-radius: 999px;
+}
+
+.loading-card {
+  min-height: 110px;
+}
+
+@keyframes loading-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 .dwell-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
