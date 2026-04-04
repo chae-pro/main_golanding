@@ -10,6 +10,16 @@ type SubmitState =
   | { status: "success"; message: string }
   | { status: "error"; message: string };
 
+function getSignupStatusLabel(status: SignupRequest["status"]) {
+  if (status === "pending") {
+    return "대기중";
+  }
+  if (status === "approved") {
+    return "승인됨";
+  }
+  return "반려됨";
+}
+
 export function SignupRequestsManager({
   initialSignupRequests,
 }: {
@@ -82,66 +92,57 @@ export function SignupRequestsManager({
       <div className="section-heading">
         <span className="eyebrow">가입 신청</span>
         <h2>가입 신청 관리</h2>
-        <p>사용자 신청을 확인하고 승인 또는 반려할 수 있습니다.</p>
       </div>
 
-      <div className="admin-account-list">
+      <div className="admin-line-list">
         {signupRequests.length > 0 ? (
           signupRequests.map((request) => {
-            const isPending = request.status === "pending";
             const state = rowState[request.id];
+            const canApprove = request.status !== "approved";
+            const canReject = request.status === "pending";
 
             return (
-              <article className="list-item" key={request.id}>
-                <div className="admin-account-header">
-                  <div>
-                    <h3>{request.email}</h3>
-                    <div className="meta-row">
-                      <span>{request.name}</span>
-                      {request.cohort ? <span>{request.cohort}</span> : null}
-                      <span>{request.status === "pending" ? "대기중" : request.status === "approved" ? "승인됨" : "반려됨"}</span>
-                    </div>
+              <article className="admin-line-row" key={request.id}>
+                <div className="admin-line-main">
+                  <div className="admin-line-title-block">
+                    <strong>{request.email}</strong>
+                    <span>{request.name}</span>
                   </div>
 
-                  {isPending ? (
-                    <div className="link-row">
-                      <button
-                        className="primary-button"
-                        disabled={processingId === request.id}
-                        onClick={() => void reviewRequest(request.id, "approve")}
-                        type="button"
-                      >
-                        {processingId === request.id ? "처리 중..." : "승인"}
-                      </button>
-                      <button
-                        className="ghost-button"
-                        disabled={processingId === request.id}
-                        onClick={() => void reviewRequest(request.id, "reject")}
-                        type="button"
-                      >
-                        반려
-                      </button>
-                    </div>
+                  <div className="admin-line-info">{request.cohort || "-"}</div>
+                  <div className="admin-line-info">{getSignupStatusLabel(request.status)}</div>
+                  <div className="admin-line-info">
+                    {new Date(request.createdAt).toLocaleString("ko-KR")}
+                  </div>
+                  <div className="admin-line-info">
+                    {new Date(request.updatedAt).toLocaleString("ko-KR")}
+                  </div>
+                  <div className="admin-line-note">{request.note || "-"}</div>
+                </div>
+
+                <div className="admin-line-actions">
+                  {canApprove ? (
+                    <button
+                      className="primary-button admin-line-button"
+                      disabled={processingId === request.id}
+                      onClick={() => void reviewRequest(request.id, "approve")}
+                      type="button"
+                    >
+                      {processingId === request.id ? "처리 중..." : "승인"}
+                    </button>
+                  ) : null}
+
+                  {canReject ? (
+                    <button
+                      className="ghost-button admin-line-button"
+                      disabled={processingId === request.id}
+                      onClick={() => void reviewRequest(request.id, "reject")}
+                      type="button"
+                    >
+                      반려
+                    </button>
                   ) : null}
                 </div>
-
-                <div className="grid-two">
-                  <div className="detail-card">
-                    <strong>{new Date(request.createdAt).toLocaleString()}</strong>
-                    <p>신청 시각</p>
-                  </div>
-                  <div className="detail-card">
-                    <strong>{new Date(request.updatedAt).toLocaleString()}</strong>
-                    <p>마지막 처리 시각</p>
-                  </div>
-                </div>
-
-                {request.note ? (
-                  <div className="note-box">
-                    <strong>신청 메모</strong>
-                    <p>{request.note}</p>
-                  </div>
-                ) : null}
 
                 {state && state.status !== "idle" ? (
                   <p className={state.status === "success" ? "status-success" : "status-error"}>

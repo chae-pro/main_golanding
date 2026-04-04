@@ -494,7 +494,10 @@ export async function reviewSignupRequest(input: {
     throw new Error("SIGNUP_REQUEST_NOT_FOUND");
   }
 
-  if (existing.status !== "pending") {
+  if (
+    (existing.status === "approved" && input.action === "approve") ||
+    (existing.status === "rejected" && input.action === "reject")
+  ) {
     throw new Error("SIGNUP_REQUEST_ALREADY_REVIEWED");
   }
 
