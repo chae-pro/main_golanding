@@ -42,8 +42,8 @@ export function AnalysisVisuals({
           <span className="eyebrow">체류 오버레이 + 클릭 히트맵</span>
           <h2>랜딩 이미지 오버레이</h2>
           <p>
-            오버레이 숫자는 각 세션을 100%로 정규화한 뒤 평균한 체류 비율입니다. 클릭 좌표는
-            같은 이미지 위에 겹쳐서 표시합니다.
+            1구간 기본 노출 1.5초를 제외한 뒤, 각 세션을 100%로 정규화한 체류 비율을 이미지 위에
+            바로 표시합니다.
           </p>
         </div>
 
@@ -89,11 +89,11 @@ export function AnalysisVisuals({
 
       <section className="list-panel">
         <div className="section-heading">
-          <span className="eyebrow">스크롤 도달률</span>
+          <span className="eyebrow">구간별 퍼센트 그래프</span>
           <h2>20구간 도달률</h2>
           <p>
-            이 값은 체류 비율이 아니라, 해당 구간이 화면에 한 번이라도 보인 세션 비율입니다.
-            그래서 세션 수가 적으면 20%, 40%처럼 계단형으로 보일 수 있습니다.
+            이 그래프는 세션 개수 단위 계단형 비율이 아니라, 1구간 기본 노출 1.5초를 제외한
+            구간별 실질 체류 퍼센트를 막대 형태로 보여줍니다.
           </p>
         </div>
 

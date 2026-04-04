@@ -88,7 +88,7 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
           <span className="eyebrow">정규화 체류맵</span>
           <h2>20구간 정규화 보기</h2>
           <p>
-            각 세션을 100%로 정규화한 뒤 평균한 체류 비율입니다. 위의 도달률과는 다른 지표이며,
+            1구간 기본 노출 1.5초를 제외한 뒤 각 세션을 100%로 정규화한 평균 체류 비율입니다.
             합계는 100% 근처가 됩니다.
           </p>
         </div>

@@ -18,6 +18,7 @@ const SECTION_COUNT = 20;
 const IDLE_DISCARD_MS = 30_000;
 const IDLE_EXCLUDE_MS = 60_000;
 const MIN_VIEWPORT_BOTTOM_RATIO = 0.05;
+const FIRST_SECTION_BASELINE_MS = 1_500;
 
 type VisitorSessionRow = {
   id: string;
@@ -59,6 +60,11 @@ type FormSubmissionRow = {
 type ViewportRange = {
   topRatio: number;
   bottomRatio: number;
+};
+
+type AdjustedSessionDwell = {
+  adjustedValidDwellMs: number;
+  adjustedSectionDwellMs: number[];
 };
 
 function nowIso() {
@@ -127,22 +133,53 @@ function distributeDwellAcrossViewport(
   return next;
 }
 
+function getAdjustedSessionDwell(session: VisitorSession): AdjustedSessionDwell {
+  const adjustedSectionDwellMs = [...session.sectionDwellMs];
+  const deductedMs = Math.min(
+    FIRST_SECTION_BASELINE_MS,
+    adjustedSectionDwellMs[0] ?? 0,
+    session.validDwellMs,
+  );
+
+  adjustedSectionDwellMs[0] = Math.max((adjustedSectionDwellMs[0] ?? 0) - deductedMs, 0);
+
+  return {
+    adjustedValidDwellMs: Math.max(session.validDwellMs - deductedMs, 0),
+    adjustedSectionDwellMs,
+  };
+}
+
 function getAverageNormalizedDwellSections(sessions: VisitorSession[]) {
   if (sessions.length === 0) {
     return Array.from({ length: SECTION_COUNT }, () => 0);
   }
 
   const totals = Array.from({ length: SECTION_COUNT }, () => 0);
+  let sessionCount = 0;
 
   for (const session of sessions) {
+    const adjusted = getAdjustedSessionDwell(session);
+
+    if (adjusted.adjustedValidDwellMs <= 0) {
+      continue;
+    }
+
+    sessionCount += 1;
+
     for (let index = 0; index < SECTION_COUNT; index += 1) {
       const value =
-        session.validDwellMs > 0 ? (session.sectionDwellMs[index] / session.validDwellMs) * 100 : 0;
+        adjusted.adjustedValidDwellMs > 0
+          ? (adjusted.adjustedSectionDwellMs[index] / adjusted.adjustedValidDwellMs) * 100
+          : 0;
       totals[index] += value;
     }
   }
 
-  return totals.map((value) => round(value / sessions.length));
+  if (sessionCount === 0) {
+    return Array.from({ length: SECTION_COUNT }, () => 0);
+  }
+
+  return totals.map((value) => round(value / sessionCount));
 }
 
 function mapVisitorSession(row: VisitorSessionRow): VisitorSession {
@@ -496,7 +533,7 @@ export async function getLandingMetrics(landingId: string): Promise<LandingMetri
       : 0;
 
   const validSessions = landingSessions.filter(
-    (item) => !item.excludedFromDwell && item.validDwellMs > 0,
+    (item) => !item.excludedFromDwell && getAdjustedSessionDwell(item).adjustedValidDwellMs > 0,
   );
   const excludedSessions = landingSessions.filter((item) => item.excludedFromDwell);
   const dwellSections = getAverageNormalizedDwellSections(validSessions);
@@ -538,7 +575,7 @@ export async function getLandingAnalysisVisuals(
 
   const landingSessions = sessions.filter((item) => item.landingId === landingId);
   const validSessions = landingSessions.filter(
-    (item) => !item.excludedFromDwell && item.validDwellMs > 0,
+    (item) => !item.excludedFromDwell && getAdjustedSessionDwell(item).adjustedValidDwellMs > 0,
   );
   const clickEvents = events.filter(
     (item) =>
@@ -555,23 +592,16 @@ export async function getLandingAnalysisVisuals(
     targetType: event.targetType ?? "page",
   }));
 
-  const scrollSections: ScrollSectionMetric[] = Array.from({ length: SECTION_COUNT }, (_, index) => {
-    const section = index + 1;
-    const reachedSessionCount = landingSessions.filter(
-      (item) => item.maxVisibleSectionIndex >= section,
-    ).length;
-    const reachRate =
-      landingSessions.length > 0
-        ? round((reachedSessionCount / landingSessions.length) * 100)
-        : 0;
-
-    return {
-      section,
-      reachRate,
-      reachedSessionCount,
-      totalSessionCount: landingSessions.length,
-    };
-  });
+  const weightedScrollRates = getAverageNormalizedDwellSections(validSessions);
+  const scrollSections: ScrollSectionMetric[] = Array.from({ length: SECTION_COUNT }, (_, index) => ({
+    section: index + 1,
+    reachRate: weightedScrollRates[index],
+    reachedSessionCount: validSessions.filter((item) => {
+      const adjusted = getAdjustedSessionDwell(item);
+      return adjusted.adjustedSectionDwellMs[index] > 0;
+    }).length,
+    totalSessionCount: validSessions.length,
+  }));
 
   return {
     heatmapPoints,
