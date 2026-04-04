@@ -978,7 +978,9 @@ textarea {
 
 .admin-line-row {
   display: grid;
-  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px 18px;
+  align-items: center;
   padding: 16px 18px;
   border-radius: 22px;
   background: rgba(255, 255, 255, 0.94);
@@ -991,6 +993,7 @@ textarea {
   grid-template-columns: minmax(220px, 1.4fr) minmax(110px, 0.68fr) minmax(110px, 0.68fr) minmax(110px, 0.68fr) minmax(170px, 0.92fr) minmax(170px, 0.92fr) minmax(180px, 1.05fr);
   gap: 12px;
   align-items: center;
+  min-width: 0;
 }
 
 .admin-line-main-accounts {
@@ -1031,13 +1034,22 @@ textarea {
   justify-content: flex-end;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  justify-self: end;
+  align-self: center;
 }
 
 .admin-line-button {
   min-width: 88px;
   min-height: 42px;
   font-weight: 800;
+  white-space: nowrap;
+}
+
+.admin-line-row > .status-success,
+.admin-line-row > .status-error {
+  grid-column: 1 / -1;
+  margin-top: 0;
 }
 
 .admin-inline-field {
@@ -1161,6 +1173,10 @@ textarea {
 
   .admin-line-main,
   .admin-line-main-accounts {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-line-row {
     grid-template-columns: 1fr;
   }
 
