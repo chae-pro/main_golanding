@@ -50,6 +50,7 @@ export type LandingMetrics = {
   ctaClickCount: number;
   formSubmissionCount: number;
   avgScrollDepth: number;
+  avgDwellSeconds: number;
   scrollCompletionRate: number;
   validDwellSessionCount: number;
   excludedDwellSessionCount: number;

@@ -17,6 +17,7 @@ const EMPTY_METRICS: LandingMetrics = {
   ctaClickCount: 0,
   formSubmissionCount: 0,
   avgScrollDepth: 0,
+  avgDwellSeconds: 0,
   scrollCompletionRate: 0,
   validDwellSessionCount: 0,
   excludedDwellSessionCount: 0,

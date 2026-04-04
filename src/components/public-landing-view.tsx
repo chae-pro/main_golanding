@@ -10,22 +10,46 @@ type SubmitState =
   | { status: "success"; message: string }
   | { status: "error"; message: string };
 
-const HEARTBEAT_INTERVAL_MS = 1_000;
+const HEARTBEAT_INTERVAL_MS = 750;
 
-function getPageMetrics() {
-  const documentHeight = Math.max(document.documentElement.scrollHeight, window.innerHeight, 1);
-  const scrollableHeight = Math.max(documentHeight - window.innerHeight, 1);
-  const scrollTop = window.scrollY;
-  const scrollDepth = (scrollTop / scrollableHeight) * 100;
-  const viewportTopRatio = scrollTop / documentHeight;
-  const viewportBottomRatio = (scrollTop + window.innerHeight) / documentHeight;
-  const midpoint = (viewportTopRatio + viewportBottomRatio) / 2;
-  const sectionIndex = Math.min(Math.max(Math.floor(midpoint * 20) + 1, 1), 20);
+function getTrackedAreaMetrics(target: HTMLElement | null) {
+  const fallback = {
+    scrollDepth: 0,
+    viewportTopRatio: 0,
+    viewportBottomRatio: 0,
+    sectionIndex: 1,
+  };
+
+  if (!target) {
+    return fallback;
+  }
+
+  const rect = target.getBoundingClientRect();
+  const areaTop = rect.top + window.scrollY;
+  const areaBottom = rect.bottom + window.scrollY;
+  const areaHeight = Math.max(rect.height, 1);
+  const viewportTop = window.scrollY;
+  const viewportBottom = window.scrollY + window.innerHeight;
+
+  const visibleTop = Math.max(viewportTop, areaTop);
+  const visibleBottom = Math.min(viewportBottom, areaBottom);
+  const hasVisibleArea = visibleBottom > visibleTop;
+
+  const viewportTopRatio = hasVisibleArea ? (visibleTop - areaTop) / areaHeight : 0;
+  const viewportBottomRatio = hasVisibleArea ? (visibleBottom - areaTop) / areaHeight : 0;
+  const midpoint = hasVisibleArea ? (viewportTopRatio + viewportBottomRatio) / 2 : 0;
+  const sectionIndex = hasVisibleArea
+    ? Math.min(Math.max(Math.floor(midpoint * 20) + 1, 1), 20)
+    : 1;
+
+  const totalScrollableInsideArea = Math.max(areaHeight - window.innerHeight, 1);
+  const relativeScrollTop = Math.max(0, Math.min(viewportTop - areaTop, totalScrollableInsideArea));
+  const scrollDepth = hasVisibleArea ? (relativeScrollTop / totalScrollableInsideArea) * 100 : 0;
 
   return {
     scrollDepth: Math.max(0, Math.min(scrollDepth, 100)),
     viewportTopRatio: Math.max(0, Math.min(viewportTopRatio, 1)),
-    viewportBottomRatio: Math.max(0.0001, Math.min(viewportBottomRatio, 1)),
+    viewportBottomRatio: Math.max(0, Math.min(viewportBottomRatio, 1)),
     sectionIndex,
   };
 }
@@ -36,6 +60,7 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionVersion, setSubmissionVersion] = useState(0);
   const scrollTimeoutRef = useRef<number | null>(null);
+  const trackAreaRef = useRef<HTMLElement | null>(null);
 
   const orderedImages = useMemo(
     () => [...landing.images].sort((a, b) => a.sortOrder - b.sortOrder),
@@ -49,6 +74,10 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
     () => [...landing.formFields].sort((a, b) => a.sortOrder - b.sortOrder),
     [landing.formFields],
   );
+
+  function getPageMetrics() {
+    return getTrackedAreaMetrics(trackAreaRef.current);
+  }
 
   useEffect(() => {
     let isMounted = true;
@@ -151,21 +180,23 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
           targetType: "page",
           targetId: "scroll",
         });
-      }, 120);
+      }, 100);
     };
 
     const handleClick = (event: MouseEvent) => {
       const target = event.target instanceof HTMLElement ? event.target : null;
       const element = target?.closest("[data-golanding-target]") as HTMLElement | null;
-      const pageHeight = Math.max(document.documentElement.scrollHeight, window.innerHeight, 1);
-      const xRatio = event.pageX / Math.max(window.innerWidth, 1);
-      const yRatio = event.pageY / pageHeight;
+      const trackedRect = trackAreaRef.current?.getBoundingClientRect();
+      const trackedTop = trackedRect ? trackedRect.top + window.scrollY : 0;
+      const trackedHeight = Math.max(trackedRect?.height ?? 1, 1);
+      const xRatio = event.clientX / Math.max(window.innerWidth, 1);
+      const yRatio = trackedRect ? (event.pageY - trackedTop) / trackedHeight : 0;
 
       void sendEvent({
         eventType: "click",
         ...getPageMetrics(),
-        xRatio,
-        yRatio,
+        xRatio: Math.max(0, Math.min(xRatio, 1)),
+        yRatio: Math.max(0, Math.min(yRatio, 1)),
         targetType:
           (element?.dataset.golandingTarget as "page" | "cta" | "form" | undefined) ?? "page",
         targetId: element?.dataset.golandingTargetId ?? "page",
@@ -268,7 +299,7 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
 
   return (
     <main className="public-landing-shell">
-      <section className="public-landing-stack">
+      <section className="public-landing-stack" ref={trackAreaRef}>
         {orderedImages.map((image) => (
           <img
             alt={image.alt ?? landing.title}

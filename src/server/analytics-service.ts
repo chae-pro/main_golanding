@@ -87,16 +87,19 @@ function clampSectionIndex(sectionIndex: number) {
 function normalizeViewportRange(topRatio?: number, bottomRatio?: number): ViewportRange {
   const safeTop = clamp(topRatio ?? 0, 0, 1);
   const safeBottom = clamp(bottomRatio ?? MIN_VIEWPORT_BOTTOM_RATIO, 0, 1);
-  const normalizedBottom = Math.max(safeBottom, safeTop + 0.0001);
 
   return {
     topRatio: safeTop,
-    bottomRatio: clamp(normalizedBottom, 0, 1),
+    bottomRatio: safeBottom >= safeTop ? safeBottom : safeTop,
   };
 }
 
 function getSectionOverlapRatios(range: ViewportRange) {
-  const height = Math.max(range.bottomRatio - range.topRatio, 0.0001);
+  const height = range.bottomRatio - range.topRatio;
+
+  if (height <= 0) {
+    return Array.from({ length: SECTION_COUNT }, () => 0);
+  }
 
   return Array.from({ length: SECTION_COUNT }, (_, index) => {
     const sectionTop = index / SECTION_COUNT;
@@ -110,11 +113,19 @@ function getSectionOverlapRatios(range: ViewportRange) {
 }
 
 function getSectionIndexFromViewport(range: ViewportRange) {
+  if (range.bottomRatio <= range.topRatio) {
+    return 1;
+  }
+
   const midpoint = (range.topRatio + range.bottomRatio) / 2;
   return clampSectionIndex(Math.floor(midpoint * SECTION_COUNT) + 1);
 }
 
 function getMaxVisibleSectionIndex(range: ViewportRange) {
+  if (range.bottomRatio <= range.topRatio) {
+    return 0;
+  }
+
   return clampSectionIndex(Math.ceil(range.bottomRatio * SECTION_COUNT));
 }
 
@@ -479,6 +490,14 @@ export async function getLandingMetrics(landingId: string): Promise<LandingMetri
   const landingEvents = events.filter((item) => item.landingId === landingId);
   const validSessions = landingSessions.filter((item) => item.validDwellMs > 0);
   const dwellSections = getNormalizedDwellSections(validSessions);
+  const avgDwellSeconds =
+    validSessions.length > 0
+      ? round(
+          validSessions.reduce((sum, item) => sum + item.validDwellMs, 0) /
+            validSessions.length /
+            1000,
+        )
+      : 0;
 
   const sectionEntries = dwellSections.map((value, index) => ({
     section: index + 1,
@@ -509,6 +528,7 @@ export async function getLandingMetrics(landingId: string): Promise<LandingMetri
               landingSessions.length,
           )
         : 0,
+    avgDwellSeconds,
     scrollCompletionRate:
       landingSessions.length > 0
         ? round(
