@@ -219,7 +219,7 @@ textarea {
 
 .dashboard-landing-bar {
   display: grid;
-  grid-template-columns: minmax(300px, 1.8fr) minmax(160px, 0.9fr) auto auto auto auto auto auto auto;
+  grid-template-columns: minmax(300px, 1.8fr) minmax(180px, 0.95fr) minmax(120px, auto) minmax(120px, auto) auto auto auto auto auto;
   gap: 18px;
   align-items: center;
   padding: 16px 20px;
@@ -244,6 +244,11 @@ textarea {
   white-space: nowrap;
 }
 
+.dashboard-landing-info-centered {
+  text-align: center;
+  justify-self: center;
+}
+
 .dashboard-landing-info strong {
   font-size: 1.2rem;
 }
@@ -252,6 +257,10 @@ textarea {
   min-width: 96px;
   min-height: 48px;
   font-weight: 800;
+}
+
+.dashboard-inline-button-center {
+  justify-self: center;
 }
 
 .dashboard-inline-button.ghost-button {

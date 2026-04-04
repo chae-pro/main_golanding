@@ -143,13 +143,13 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
             {item.title}
           </Link>
 
-          <div className="dashboard-landing-info">{item.typeLabel}</div>
+          <div className="dashboard-landing-info dashboard-landing-info-centered">{item.typeLabel}</div>
 
-          <div className="dashboard-landing-info">
+          <div className="dashboard-landing-info dashboard-landing-info-centered">
             방문자 <strong>{item.visitorCount}</strong>
           </div>
 
-          <div className="dashboard-landing-info">
+          <div className="dashboard-landing-info dashboard-landing-info-centered">
             클릭수 <strong>{item.clickCount}</strong>
           </div>
 
@@ -166,7 +166,10 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
               : "발행전"}
           </button>
 
-          <Link className="ghost-button dashboard-inline-button" href={`/landings/${item.id}/edit`}>
+          <Link
+            className="ghost-button dashboard-inline-button dashboard-inline-button-center"
+            href={`/landings/${item.id}/edit`}
+          >
             수정
           </Link>
 
