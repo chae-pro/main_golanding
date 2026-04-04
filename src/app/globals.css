@@ -500,9 +500,11 @@ textarea {
   min-height: 42px;
   padding: 0 16px;
   border-radius: 999px;
-  background: rgba(15, 23, 42, 0.84);
-  border: 1px solid rgba(255, 255, 255, 0.42);
-  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.26);
+  background: rgba(15, 23, 42, 0.92);
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 0 0 2px rgba(15, 23, 42, 0.18),
+    0 12px 24px rgba(15, 23, 42, 0.28);
   color: #ffffff;
   backdrop-filter: blur(8px);
 }
@@ -553,7 +555,7 @@ textarea {
 
 .scroll-map-row {
   display: grid;
-  grid-template-columns: 100px 1fr 110px;
+  grid-template-columns: 100px 1fr 120px;
   gap: 12px;
   align-items: center;
 }
@@ -581,6 +583,7 @@ textarea {
 .scroll-map-meta span {
   font-weight: 800;
   font-size: 1rem;
+  line-height: 1.2;
 }
 
 .table-shell {
