@@ -29,6 +29,18 @@ function getDwellOverlayStyle(value: number, index: number) {
   };
 }
 
+function getDwellSummaryStyle(value: number) {
+  const normalized = Math.min(Math.max(value / 100, 0), 1);
+  const opacity = normalized > 0 ? 0.2 + normalized * 0.55 : 0.08;
+
+  return {
+    background: `linear-gradient(135deg,
+      rgba(248, 113, 113, ${Math.max(opacity * 1.1, 0.16)}),
+      rgba(253, 186, 116, ${Math.max(opacity * 0.9, 0.12)}))`,
+    borderColor: `rgba(255, 255, 255, ${Math.max(opacity * 0.5, 0.16)})`,
+  };
+}
+
 function formatSeconds(value: number) {
   return `${value.toFixed(1)}초`;
 }
@@ -50,41 +62,58 @@ export function AnalysisVisuals({
         </div>
 
         <div className="analysis-preview">
-          <div className="analysis-preview-stack">
-            {landing.images.map((image) => (
-              <img
-                alt={image.alt ?? landing.title}
-                className="analysis-preview-image"
-                key={image.id}
-                src={image.src}
-              />
-            ))}
+          <div className="analysis-preview-layout">
+            <div className="analysis-preview-stage">
+              <div className="analysis-preview-stack">
+                {landing.images.map((image) => (
+                  <img
+                    alt={image.alt ?? landing.title}
+                    className="analysis-preview-image"
+                    key={image.id}
+                    src={image.src}
+                  />
+                ))}
 
-            <div className="analysis-section-overlay" aria-hidden="true">
+                <div className="analysis-section-overlay" aria-hidden="true">
+                  {visuals.dwellSections.map((value, index) => (
+                    <div
+                      className="analysis-section-band"
+                      key={`${landing.id}-dwell-overlay-${index + 1}`}
+                      style={getDwellOverlayStyle(value, index)}
+                    >
+                      <span className="analysis-section-badge analysis-section-label">
+                        {index + 1}구간
+                      </span>
+                      <span className="analysis-section-badge analysis-section-value">{value}%</span>
+                    </div>
+                  ))}
+                </div>
+
+                {visuals.heatmapPoints.map((point) => (
+                  <span
+                    className={getHeatmapPointClass(point.targetType)}
+                    key={point.id}
+                    style={{
+                      left: `${point.xRatio * 100}%`,
+                      top: `${point.yRatio * 100}%`,
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="analysis-section-summary" aria-hidden="true">
               {visuals.dwellSections.map((value, index) => (
                 <div
-                  className="analysis-section-band"
-                  key={`${landing.id}-dwell-overlay-${index + 1}`}
-                  style={getDwellOverlayStyle(value, index)}
+                  className="analysis-section-summary-cell"
+                  key={`${landing.id}-dwell-summary-${index + 1}`}
+                  style={getDwellSummaryStyle(value)}
                 >
-                  <span className="analysis-section-badge analysis-section-label">
-                    {index + 1}구간
-                  </span>
-                  <span className="analysis-section-badge analysis-section-value">{value}%</span>
+                  <span className="analysis-section-summary-label">{index + 1}구간</span>
+                  <strong className="analysis-section-summary-value">{value}%</strong>
                 </div>
               ))}
             </div>
-
-            {visuals.heatmapPoints.map((point) => (
-              <span
-                className={getHeatmapPointClass(point.targetType)}
-                key={point.id}
-                style={{
-                  left: `${point.xRatio * 100}%`,
-                  top: `${point.yRatio * 100}%`,
-                }}
-              />
-            ))}
           </div>
         </div>
       </section>

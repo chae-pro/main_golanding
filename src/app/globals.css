@@ -467,6 +467,16 @@ textarea {
   border: 1px solid rgba(15, 23, 42, 0.06);
 }
 
+.analysis-preview-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 248px;
+  align-items: stretch;
+}
+
+.analysis-preview-stage {
+  min-width: 0;
+}
+
 .analysis-preview-stack {
   position: relative;
   display: block;
@@ -482,8 +492,6 @@ textarea {
 .analysis-section-overlay {
   position: absolute;
   inset: 0;
-  width: 100%;
-  min-width: 100%;
   pointer-events: none;
 }
 
@@ -524,6 +532,47 @@ textarea {
 
 .analysis-section-value {
   font-size: 1.28rem;
+}
+
+.analysis-section-summary {
+  display: grid;
+  grid-template-rows: repeat(20, minmax(0, 1fr));
+  min-height: 100%;
+  border-left: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.analysis-section-summary-cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  min-height: 72px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.45);
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.analysis-section-summary-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border-radius: 14px;
+  background: rgba(255, 248, 196, 0.96);
+  color: #111827;
+  font-size: 1.12rem;
+  font-weight: 900;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
+}
+
+.analysis-section-summary-value {
+  color: #111827;
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .heatmap-point {
@@ -730,6 +779,17 @@ textarea {
 
   .scroll-map-row {
     grid-template-columns: 1fr;
+  }
+
+  .analysis-preview-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .analysis-section-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: none;
+    border-left: 0;
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
   }
 
   .admin-account-header {
