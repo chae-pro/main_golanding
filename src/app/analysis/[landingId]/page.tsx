@@ -43,7 +43,7 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
       <div className="section-heading">
         <span className="eyebrow">분석</span>
         <h2>{landing.title}</h2>
-        <p>클릭 히트맵, 스크롤맵, 20구간 체류맵을 한 화면에서 확인할 수 있습니다.</p>
+        <p>클릭 히트맵, 체류 오버레이, 구간별 체류 퍼센트를 한 화면에서 확인할 수 있습니다.</p>
       </div>
 
       <div className="metrics-grid">
@@ -73,11 +73,11 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
         </div>
         <div className="detail-card">
           <strong>{metrics?.validDwellSessionCount ?? 0}</strong>
-          <p>유효 체류 세션</p>
+          <p>체류 계산 세션</p>
         </div>
         <div className="detail-card">
           <strong>{metrics?.excludedDwellSessionCount ?? 0}</strong>
-          <p>제외된 세션</p>
+          <p>제외 세션</p>
         </div>
       </div>
 
@@ -87,10 +87,7 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
         <div className="section-heading">
           <span className="eyebrow">정규화 체류맵</span>
           <h2>20구간 정규화 보기</h2>
-          <p>
-            1구간 기본 노출 1.5초를 제외한 뒤 각 세션을 100%로 정규화한 평균 체류 비율입니다.
-            합계는 100% 근처가 됩니다.
-          </p>
+          <p>보정 없이 누적한 체류 시간을 각 세션 100% 기준으로 정규화한 평균 비율입니다.</p>
         </div>
 
         <div className="dwell-grid">

@@ -15,10 +15,7 @@ import type {
 import { getDb } from "@/server/db";
 
 const SECTION_COUNT = 20;
-const IDLE_DISCARD_MS = 30_000;
-const IDLE_EXCLUDE_MS = 60_000;
 const MIN_VIEWPORT_BOTTOM_RATIO = 0.05;
-const FIRST_SECTION_BASELINE_MS = 1_500;
 
 type VisitorSessionRow = {
   id: string;
@@ -62,11 +59,6 @@ type ViewportRange = {
   bottomRatio: number;
 };
 
-type AdjustedSessionDwell = {
-  adjustedValidDwellMs: number;
-  adjustedSectionDwellMs: number[];
-};
-
 function nowIso() {
   return new Date().toISOString();
 }
@@ -100,7 +92,10 @@ function getSectionOverlapRatios(range: ViewportRange) {
   return Array.from({ length: SECTION_COUNT }, (_, index) => {
     const sectionTop = index / SECTION_COUNT;
     const sectionBottom = (index + 1) / SECTION_COUNT;
-    const overlap = Math.max(0, Math.min(range.bottomRatio, sectionBottom) - Math.max(range.topRatio, sectionTop));
+    const overlap = Math.max(
+      0,
+      Math.min(range.bottomRatio, sectionBottom) - Math.max(range.topRatio, sectionTop),
+    );
     return overlap / height;
   });
 }
@@ -133,53 +128,32 @@ function distributeDwellAcrossViewport(
   return next;
 }
 
-function getAdjustedSessionDwell(session: VisitorSession): AdjustedSessionDwell {
-  const adjustedSectionDwellMs = [...session.sectionDwellMs];
-  const deductedMs = Math.min(
-    FIRST_SECTION_BASELINE_MS,
-    adjustedSectionDwellMs[0] ?? 0,
-    session.validDwellMs,
-  );
-
-  adjustedSectionDwellMs[0] = Math.max((adjustedSectionDwellMs[0] ?? 0) - deductedMs, 0);
-
-  return {
-    adjustedValidDwellMs: Math.max(session.validDwellMs - deductedMs, 0),
-    adjustedSectionDwellMs,
-  };
-}
-
-function getAverageNormalizedDwellSections(sessions: VisitorSession[]) {
+function getNormalizedDwellSections(sessions: VisitorSession[]) {
   if (sessions.length === 0) {
     return Array.from({ length: SECTION_COUNT }, () => 0);
   }
 
   const totals = Array.from({ length: SECTION_COUNT }, () => 0);
-  let sessionCount = 0;
+  let validSessionCount = 0;
 
   for (const session of sessions) {
-    const adjusted = getAdjustedSessionDwell(session);
-
-    if (adjusted.adjustedValidDwellMs <= 0) {
+    if (session.validDwellMs <= 0) {
       continue;
     }
 
-    sessionCount += 1;
+    validSessionCount += 1;
 
     for (let index = 0; index < SECTION_COUNT; index += 1) {
-      const value =
-        adjusted.adjustedValidDwellMs > 0
-          ? (adjusted.adjustedSectionDwellMs[index] / adjusted.adjustedValidDwellMs) * 100
-          : 0;
+      const value = (session.sectionDwellMs[index] / session.validDwellMs) * 100;
       totals[index] += value;
     }
   }
 
-  if (sessionCount === 0) {
+  if (validSessionCount === 0) {
     return Array.from({ length: SECTION_COUNT }, () => 0);
   }
 
-  return totals.map((value) => round(value / sessionCount));
+  return totals.map((value) => round(value / validSessionCount));
 }
 
 function mapVisitorSession(row: VisitorSessionRow): VisitorSession {
@@ -193,7 +167,7 @@ function mapVisitorSession(row: VisitorSessionRow): VisitorSession {
     lastViewportBottomRatio: Number(row.last_viewport_bottom_ratio ?? MIN_VIEWPORT_BOTTOM_RATIO),
     maxVisibleSectionIndex: Number(row.max_visible_section_index ?? 1),
     maxScrollDepth: Number(row.max_scroll_depth),
-    excludedFromDwell: Boolean(row.excluded_from_dwell),
+    excludedFromDwell: false,
     validDwellMs: Number(row.valid_dwell_ms),
     sectionDwellMs: JSON.parse(row.section_dwell_json) as number[],
   };
@@ -366,15 +340,15 @@ export async function recordAnalyticsEvent(input: {
 
   const session = mapVisitorSession(row);
   const timestamp = new Date();
-  const previous = new Date(session.lastActivityAt).getTime();
-  const deltaMs = Math.max(timestamp.getTime() - previous, 0);
+  const previousTime = new Date(session.lastActivityAt).getTime();
+  const deltaMs = Math.max(timestamp.getTime() - previousTime, 0);
   const currentViewport = normalizeViewportRange(input.viewportTopRatio, input.viewportBottomRatio);
   const previousViewport = normalizeViewportRange(
     session.lastViewportTopRatio,
     session.lastViewportBottomRatio,
   );
 
-  let nextSession: VisitorSession = {
+  const nextSession: VisitorSession = {
     ...session,
     lastActivityAt: timestamp.toISOString(),
     lastSectionIndex: clampSectionIndex(input.sectionIndex ?? getSectionIndexFromViewport(currentViewport)),
@@ -385,26 +359,10 @@ export async function recordAnalyticsEvent(input: {
       getMaxVisibleSectionIndex(currentViewport),
     ),
     maxScrollDepth: Math.max(session.maxScrollDepth, round(input.scrollDepth ?? 0)),
+    excludedFromDwell: false,
+    validDwellMs: session.validDwellMs + deltaMs,
+    sectionDwellMs: distributeDwellAcrossViewport(session.sectionDwellMs, previousViewport, deltaMs),
   };
-
-  if (!session.excludedFromDwell) {
-    if (deltaMs >= IDLE_EXCLUDE_MS) {
-      nextSession = {
-        ...nextSession,
-        excludedFromDwell: true,
-      };
-    } else if (deltaMs < IDLE_DISCARD_MS) {
-      nextSession = {
-        ...nextSession,
-        validDwellMs: session.validDwellMs + deltaMs,
-        sectionDwellMs: distributeDwellAcrossViewport(
-          session.sectionDwellMs,
-          previousViewport,
-          deltaMs,
-        ),
-      };
-    }
-  }
 
   const event: AnalyticsEvent = {
     id: randomUUID(),
@@ -437,7 +395,7 @@ export async function recordAnalyticsEvent(input: {
         nextSession.lastViewportBottomRatio,
         nextSession.maxVisibleSectionIndex,
         nextSession.maxScrollDepth,
-        nextSession.excludedFromDwell ? 1 : 0,
+        0,
         nextSession.validDwellMs,
         JSON.stringify(nextSession.sectionDwellMs),
         nextSession.id,
@@ -510,33 +468,8 @@ export async function getLandingMetrics(landingId: string): Promise<LandingMetri
 
   const landingSessions = sessions.filter((item) => item.landingId === landingId);
   const landingEvents = events.filter((item) => item.landingId === landingId);
-
-  const visitorCount = landingSessions.length;
-  const totalClickCount = landingEvents.filter((item) => item.eventType === "click").length;
-  const ctaClickCount = landingEvents.filter(
-    (item) => item.eventType === "click" && item.targetType === "cta",
-  ).length;
-  const formSubmissionCount = submissions.length;
-  const avgScrollDepth =
-    visitorCount > 0
-      ? round(
-          landingSessions.reduce((sum, item) => sum + item.maxScrollDepth, 0) / visitorCount,
-        )
-      : 0;
-  const scrollCompletionRate =
-    visitorCount > 0
-      ? round(
-          (landingSessions.filter((item) => item.maxVisibleSectionIndex >= SECTION_COUNT).length /
-            visitorCount) *
-            100,
-        )
-      : 0;
-
-  const validSessions = landingSessions.filter(
-    (item) => !item.excludedFromDwell && getAdjustedSessionDwell(item).adjustedValidDwellMs > 0,
-  );
-  const excludedSessions = landingSessions.filter((item) => item.excludedFromDwell);
-  const dwellSections = getAverageNormalizedDwellSections(validSessions);
+  const validSessions = landingSessions.filter((item) => item.validDwellMs > 0);
+  const dwellSections = getNormalizedDwellSections(validSessions);
 
   const sectionEntries = dwellSections.map((value, index) => ({
     section: index + 1,
@@ -554,14 +487,29 @@ export async function getLandingMetrics(landingId: string): Promise<LandingMetri
     .map((item) => item.section);
 
   return {
-    visitorCount,
-    totalClickCount,
-    ctaClickCount,
-    formSubmissionCount,
-    avgScrollDepth,
-    scrollCompletionRate,
+    visitorCount: landingSessions.length,
+    totalClickCount: landingEvents.filter((item) => item.eventType === "click").length,
+    ctaClickCount: landingEvents.filter(
+      (item) => item.eventType === "click" && item.targetType === "cta",
+    ).length,
+    formSubmissionCount: submissions.length,
+    avgScrollDepth:
+      landingSessions.length > 0
+        ? round(
+            landingSessions.reduce((sum, item) => sum + item.maxScrollDepth, 0) /
+              landingSessions.length,
+          )
+        : 0,
+    scrollCompletionRate:
+      landingSessions.length > 0
+        ? round(
+            (landingSessions.filter((item) => item.maxVisibleSectionIndex >= SECTION_COUNT).length /
+              landingSessions.length) *
+              100,
+          )
+        : 0,
     validDwellSessionCount: validSessions.length,
-    excludedDwellSessionCount: excludedSessions.length,
+    excludedDwellSessionCount: 0,
     dwellSections,
     topSections,
     weakSections,
@@ -574,9 +522,8 @@ export async function getLandingAnalysisVisuals(
   const [sessions, events] = await Promise.all([listVisitorSessions(), listAnalyticsEvents()]);
 
   const landingSessions = sessions.filter((item) => item.landingId === landingId);
-  const validSessions = landingSessions.filter(
-    (item) => !item.excludedFromDwell && getAdjustedSessionDwell(item).adjustedValidDwellMs > 0,
-  );
+  const validSessions = landingSessions.filter((item) => item.validDwellMs > 0);
+  const normalizedSections = getNormalizedDwellSections(validSessions);
   const clickEvents = events.filter(
     (item) =>
       item.landingId === landingId &&
@@ -592,20 +539,16 @@ export async function getLandingAnalysisVisuals(
     targetType: event.targetType ?? "page",
   }));
 
-  const weightedScrollRates = getAverageNormalizedDwellSections(validSessions);
   const scrollSections: ScrollSectionMetric[] = Array.from({ length: SECTION_COUNT }, (_, index) => ({
     section: index + 1,
-    reachRate: weightedScrollRates[index],
-    reachedSessionCount: validSessions.filter((item) => {
-      const adjusted = getAdjustedSessionDwell(item);
-      return adjusted.adjustedSectionDwellMs[index] > 0;
-    }).length,
+    reachRate: normalizedSections[index],
+    reachedSessionCount: validSessions.filter((item) => item.sectionDwellMs[index] > 0).length,
     totalSessionCount: validSessions.length,
   }));
 
   return {
     heatmapPoints,
     scrollSections,
-    dwellSections: getAverageNormalizedDwellSections(validSessions),
+    dwellSections: normalizedSections,
   };
 }

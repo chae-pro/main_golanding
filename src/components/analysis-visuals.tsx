@@ -42,8 +42,8 @@ export function AnalysisVisuals({
           <span className="eyebrow">체류 오버레이 + 클릭 히트맵</span>
           <h2>랜딩 이미지 오버레이</h2>
           <p>
-            1구간 기본 노출 1.5초를 제외한 뒤, 각 세션을 100%로 정규화한 체류 비율을 이미지 위에
-            바로 표시합니다.
+            보정 없이 실제 체류 데이터를 그대로 누적한 뒤, 각 세션을 100%로 정규화한 구간 비율을
+            이미지 위에 표시합니다.
           </p>
         </div>
 
@@ -89,11 +89,11 @@ export function AnalysisVisuals({
 
       <section className="list-panel">
         <div className="section-heading">
-          <span className="eyebrow">구간별 퍼센트 그래프</span>
-          <h2>20구간 도달률</h2>
+          <span className="eyebrow">구간별 체류 비율 그래프</span>
+          <h2>20구간 퍼센트 그래프</h2>
           <p>
-            이 그래프는 세션 개수 단위 계단형 비율이 아니라, 1구간 기본 노출 1.5초를 제외한
-            구간별 실질 체류 퍼센트를 막대 형태로 보여줍니다.
+            아래 막대는 도달 세션 수를 계단형으로 보여주는 그래프가 아니라, 실제 체류 데이터를
+            그대로 정규화한 구간별 퍼센트입니다.
           </p>
         </div>
 

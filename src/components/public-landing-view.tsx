@@ -10,7 +10,7 @@ type SubmitState =
   | { status: "success"; message: string }
   | { status: "error"; message: string };
 
-const ACTIVITY_PING_INTERVAL_MS = 3_000;
+const HEARTBEAT_INTERVAL_MS = 1_000;
 
 function getPageMetrics() {
   const documentHeight = Math.max(document.documentElement.scrollHeight, window.innerHeight, 1);
@@ -36,7 +36,6 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionVersion, setSubmissionVersion] = useState(0);
   const scrollTimeoutRef = useRef<number | null>(null);
-  const lastActivityPingAtRef = useRef(0);
 
   const orderedImages = useMemo(
     () => [...landing.images].sort((a, b) => a.sortOrder - b.sortOrder),
@@ -120,31 +119,6 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
       });
     }
 
-    function markActivityTimestamp() {
-      lastActivityPingAtRef.current = Date.now();
-    }
-
-    function sendActivityPing(reason: string, force = false) {
-      const now = Date.now();
-
-      if (!force && now - lastActivityPingAtRef.current < ACTIVITY_PING_INTERVAL_MS) {
-        return;
-      }
-
-      markActivityTimestamp();
-
-      void sendEvent(
-        {
-          eventType: "activity",
-          ...getPageMetrics(),
-          targetType: "page",
-          targetId: reason,
-        },
-        { keepalive: force },
-      );
-    }
-
-    markActivityTimestamp();
     void sendEvent({
       eventType: "pageview",
       ...getPageMetrics(),
@@ -152,20 +126,32 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
       targetId: "initial-view",
     });
 
+    const heartbeatId = window.setInterval(() => {
+      if (document.visibilityState === "hidden") {
+        return;
+      }
+
+      void sendEvent({
+        eventType: "activity",
+        ...getPageMetrics(),
+        targetType: "page",
+        targetId: "heartbeat",
+      });
+    }, HEARTBEAT_INTERVAL_MS);
+
     const handleScroll = () => {
       if (scrollTimeoutRef.current !== null) {
         window.clearTimeout(scrollTimeoutRef.current);
       }
 
       scrollTimeoutRef.current = window.setTimeout(() => {
-        markActivityTimestamp();
         void sendEvent({
           eventType: "scroll",
           ...getPageMetrics(),
           targetType: "page",
           targetId: "scroll",
         });
-      }, 200);
+      }, 120);
     };
 
     const handleClick = (event: MouseEvent) => {
@@ -175,7 +161,6 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
       const xRatio = event.pageX / Math.max(window.innerWidth, 1);
       const yRatio = event.pageY / pageHeight;
 
-      markActivityTimestamp();
       void sendEvent({
         eventType: "click",
         ...getPageMetrics(),
@@ -187,42 +172,41 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
       });
     };
 
-    const handleMouseMove = () => {
-      sendActivityPing("mousemove");
-    };
-
-    const handleKeyDown = () => {
-      sendActivityPing("keydown");
-    };
-
-    const handleTouchStart = () => {
-      sendActivityPing("touchstart");
+    const handlePageHide = () => {
+      void sendEvent(
+        {
+          eventType: "activity",
+          ...getPageMetrics(),
+          targetType: "page",
+          targetId: "pagehide",
+        },
+        { keepalive: true },
+      );
     };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
-        sendActivityPing("visibility-hidden", true);
+        void sendEvent(
+          {
+            eventType: "activity",
+            ...getPageMetrics(),
+            targetType: "page",
+            targetId: "visibility-hidden",
+          },
+          { keepalive: true },
+        );
       }
-    };
-
-    const handlePageHide = () => {
-      sendActivityPing("pagehide", true);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("click", handleClick);
-    window.addEventListener("mousemove", handleMouseMove, { passive: true });
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("touchstart", handleTouchStart, { passive: true });
     window.addEventListener("pagehide", handlePageHide);
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
+      window.clearInterval(heartbeatId);
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("click", handleClick);
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("pagehide", handlePageHide);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
 
