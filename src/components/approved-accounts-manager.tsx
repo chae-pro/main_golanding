@@ -324,6 +324,88 @@ export function ApprovedAccountsManager({
     <div className="admin-stack">
       <section className="panel list-panel">
         <div className="section-heading">
+          <span className="eyebrow">계정</span>
+          <h2>승인 계정 {accounts.length}건</h2>
+        </div>
+
+        <div className="admin-line-list">
+          {accounts.map((account) => {
+            const accountState = rowState[account.id];
+
+            return (
+              <article className="admin-line-row" key={account.id}>
+                <div className="admin-line-main admin-line-main-accounts">
+                  <div className="admin-line-title-block">
+                    <strong>{account.email}</strong>
+                    <span>생성일 {new Date(account.createdAt).toLocaleDateString("ko-KR")}</span>
+                  </div>
+
+                  <label className="admin-inline-field">
+                    <span>이름</span>
+                    <input
+                      type="text"
+                      value={account.name}
+                      onChange={(event) => updateAccount(account.id, "name", event.target.value)}
+                    />
+                  </label>
+
+                  <label className="admin-inline-field">
+                    <span>기수</span>
+                    <input
+                      type="text"
+                      value={account.cohort}
+                      onChange={(event) => updateAccount(account.id, "cohort", event.target.value)}
+                    />
+                  </label>
+
+                  <label className="admin-inline-field admin-inline-field-select">
+                    <span>상태</span>
+                    <select
+                      value={account.status}
+                      onChange={(event) => updateAccount(account.id, "status", event.target.value)}
+                    >
+                      <option value="approved">승인됨</option>
+                      <option value="blocked">차단됨</option>
+                      <option value="expired">만료됨</option>
+                    </select>
+                  </label>
+
+                  <label className="admin-inline-field admin-inline-field-date">
+                    <span>만료일</span>
+                    <input
+                      type="date"
+                      value={account.expiresAt}
+                      onChange={(event) =>
+                        updateAccount(account.id, "expiresAt", event.target.value)
+                      }
+                    />
+                  </label>
+                </div>
+
+                <div className="admin-line-actions">
+                  <button
+                    className="ghost-button admin-line-button"
+                    disabled={savingRowId === account.id}
+                    onClick={() => void saveAccount(account.id)}
+                    type="button"
+                  >
+                    {savingRowId === account.id ? "저장 중..." : "저장"}
+                  </button>
+                </div>
+
+                {accountState && accountState.status !== "idle" ? (
+                  <p className={accountState.status === "success" ? "status-success" : "status-error"}>
+                    {accountState.message}
+                  </p>
+                ) : null}
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="panel list-panel">
+        <div className="section-heading">
           <span className="eyebrow">배포 점검</span>
           <h2>배포 준비 상태</h2>
           <p>
@@ -627,87 +709,6 @@ export function ApprovedAccountsManager({
         </div>
       </section>
 
-      <section className="panel list-panel">
-        <div className="section-heading">
-          <span className="eyebrow">계정</span>
-          <h2>승인 계정 {accounts.length}건</h2>
-        </div>
-
-        <div className="admin-line-list">
-          {accounts.map((account) => {
-            const accountState = rowState[account.id];
-
-            return (
-              <article className="admin-line-row" key={account.id}>
-                <div className="admin-line-main admin-line-main-accounts">
-                  <div className="admin-line-title-block">
-                    <strong>{account.email}</strong>
-                    <span>생성일 {new Date(account.createdAt).toLocaleDateString("ko-KR")}</span>
-                  </div>
-
-                  <label className="admin-inline-field">
-                    <span>이름</span>
-                    <input
-                      type="text"
-                      value={account.name}
-                      onChange={(event) => updateAccount(account.id, "name", event.target.value)}
-                    />
-                  </label>
-
-                  <label className="admin-inline-field">
-                    <span>기수</span>
-                    <input
-                      type="text"
-                      value={account.cohort}
-                      onChange={(event) => updateAccount(account.id, "cohort", event.target.value)}
-                    />
-                  </label>
-
-                  <label className="admin-inline-field admin-inline-field-select">
-                    <span>상태</span>
-                    <select
-                      value={account.status}
-                      onChange={(event) => updateAccount(account.id, "status", event.target.value)}
-                    >
-                      <option value="approved">승인됨</option>
-                      <option value="blocked">차단됨</option>
-                      <option value="expired">만료됨</option>
-                    </select>
-                  </label>
-
-                  <label className="admin-inline-field admin-inline-field-date">
-                    <span>만료일</span>
-                    <input
-                      type="date"
-                      value={account.expiresAt}
-                      onChange={(event) =>
-                        updateAccount(account.id, "expiresAt", event.target.value)
-                      }
-                    />
-                  </label>
-                </div>
-
-                <div className="admin-line-actions">
-                  <button
-                    className="ghost-button admin-line-button"
-                    disabled={savingRowId === account.id}
-                    onClick={() => void saveAccount(account.id)}
-                    type="button"
-                  >
-                    {savingRowId === account.id ? "저장 중..." : "저장"}
-                  </button>
-                </div>
-
-                {accountState && accountState.status !== "idle" ? (
-                  <p className={accountState.status === "success" ? "status-success" : "status-error"}>
-                    {accountState.message}
-                  </p>
-                ) : null}
-              </article>
-            );
-          })}
-        </div>
-      </section>
     </div>
   );
 }
