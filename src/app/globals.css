@@ -219,8 +219,8 @@ textarea {
 
 .dashboard-landing-bar {
   display: grid;
-  grid-template-columns: minmax(300px, 1.8fr) minmax(180px, 0.95fr) minmax(250px, 0.95fr) auto auto auto auto auto;
-  gap: 18px;
+  grid-template-columns: minmax(300px, 1.8fr) minmax(130px, 0.72fr) minmax(220px, 0.9fr) auto auto auto auto auto;
+  gap: 14px;
   align-items: center;
   padding: 16px 20px;
   border-radius: 20px;
@@ -281,6 +281,8 @@ textarea {
 
 .dashboard-inline-button-center {
   justify-self: center;
+  align-self: center;
+  text-align: center;
 }
 
 .dashboard-inline-button.ghost-button {
