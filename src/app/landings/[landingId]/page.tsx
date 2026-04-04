@@ -50,12 +50,12 @@ export default async function LandingDetailPage({ params }: LandingDetailPagePro
   }
 
   return (
-    <main className="panel detail-panel">
-      <div className="section-heading">
+    <main className="panel detail-panel detail-panel-compact">
+      <div className="section-heading detail-heading">
         <span className="eyebrow">랜딩 상세</span>
         <h2>{landing.title}</h2>
         <p>{landing.description || "아직 설명이 없습니다."}</p>
-        <div className="link-row">
+        <div className="link-row detail-actions">
           <Link className="text-link" href={`/landings/${landing.id}/edit`}>
             수정
           </Link>
@@ -78,7 +78,7 @@ export default async function LandingDetailPage({ params }: LandingDetailPagePro
         </div>
       </div>
 
-      <div className="detail-grid">
+      <div className="detail-grid detail-grid-compact">
         <div className="detail-card">
           <strong>{getLandingTypeLabel(landing.type)}</strong>
           <p>랜딩 유형</p>
@@ -109,21 +109,21 @@ export default async function LandingDetailPage({ params }: LandingDetailPagePro
         </div>
       </div>
 
-      <section className="list-panel">
-        <div className="section-heading">
+      <section className="list-panel detail-subpanel">
+        <div className="section-heading detail-heading">
           <span className="eyebrow">공개 URL</span>
           <h2>/l/{landing.publicSlug}</h2>
           <p>{landing.status === "published" ? "현재 외부에서 접속할 수 있습니다." : "발행 후에만 외부 공개가 가능합니다."}</p>
         </div>
       </section>
 
-      <section className="list-panel">
-        <div className="section-heading">
+      <section className="list-panel detail-subpanel">
+        <div className="section-heading detail-heading">
           <span className="eyebrow">테마</span>
           <h2>시각 설정</h2>
         </div>
 
-        <div className="detail-grid">
+        <div className="detail-grid detail-grid-compact">
           <div className="detail-card">
             <strong>{landing.theme.primaryColor}</strong>
             <p>기본 색상</p>

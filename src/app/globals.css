@@ -468,6 +468,58 @@ textarea {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.detail-panel-compact {
+  padding: 20px;
+}
+
+.detail-heading {
+  margin-bottom: 14px;
+}
+
+.detail-heading h2 {
+  margin-bottom: 8px;
+  font-size: 1.55rem;
+}
+
+.detail-heading p {
+  margin: 0 0 10px;
+}
+
+.detail-actions {
+  gap: 8px;
+}
+
+.detail-actions .ghost-button,
+.detail-actions .text-link,
+.detail-actions .primary-button,
+.detail-actions button {
+  min-height: 40px;
+}
+
+.detail-subpanel {
+  padding: 18px;
+}
+
+.detail-grid-compact {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.detail-panel-compact .detail-card {
+  padding: 14px 16px;
+  border-radius: 18px;
+}
+
+.detail-panel-compact .detail-card strong {
+  margin-bottom: 6px;
+  font-size: 1.15rem;
+}
+
+.detail-panel-compact .detail-card p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
 .note-box {
   margin-bottom: 16px;
   padding: 16px;
@@ -985,7 +1037,8 @@ textarea {
   .metrics-grid,
   .grid-two,
   .detail-grid,
-  .dwell-grid {
+  .dwell-grid,
+  .detail-grid-compact {
     grid-template-columns: 1fr;
   }
 
