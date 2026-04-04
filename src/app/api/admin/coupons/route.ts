@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 
 import { requireAdminSession } from "@/server/admin-auth";
-import { createCouponCode, listCouponCodes, updateCouponCode } from "@/server/access-service";
+import {
+  createCouponCode,
+  deleteCouponCode,
+  listCouponCodes,
+  updateCouponCode,
+} from "@/server/access-service";
 
 function getCouponErrorMessage(message: string) {
   if (message === "COUPON_CODE_REQUIRED") {
@@ -17,12 +22,21 @@ function getCouponErrorMessage(message: string) {
     return "이미 존재하는 쿠폰번호입니다.";
   }
   if (message === "COUPON_MAX_USES_BELOW_REDEEMED") {
-    return "이미 사용된 인원보다 적게 설정할 수 없습니다.";
+    return "이미 사용한 인원보다 적게는 설정할 수 없습니다.";
+  }
+  if (message === "COUPON_ALREADY_REDEEMED") {
+    return "이미 사용 이력이 있는 쿠폰은 삭제할 수 없습니다.";
   }
   if (message === "COUPON_NOT_FOUND") {
     return "쿠폰을 찾을 수 없습니다.";
   }
-  return "쿠폰 생성에 실패했습니다.";
+  if (message === "UNAUTHORIZED") {
+    return "로그인이 필요합니다.";
+  }
+  if (message === "FORBIDDEN") {
+    return "권한이 없습니다.";
+  }
+  return "쿠폰 처리에 실패했습니다.";
 }
 
 export async function GET() {
@@ -31,11 +45,9 @@ export async function GET() {
     const coupons = await listCouponCodes();
     return NextResponse.json({ coupons });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "FORBIDDEN";
-    return NextResponse.json(
-      { message: message === "UNAUTHORIZED" ? "로그인이 필요합니다." : "권한이 없습니다." },
-      { status: message === "UNAUTHORIZED" ? 401 : 403 },
-    );
+    const message = error instanceof Error ? error.message : "UNKNOWN_ERROR";
+    const status = message === "UNAUTHORIZED" ? 401 : message === "FORBIDDEN" ? 403 : 500;
+    return NextResponse.json({ message: getCouponErrorMessage(message) }, { status });
   }
 }
 
@@ -98,6 +110,27 @@ export async function PATCH(request: Request) {
       "COUPON_MAX_USES_BELOW_REDEEMED",
       "COUPON_NOT_FOUND",
     ].includes(message)
+      ? 400
+      : message === "UNAUTHORIZED"
+        ? 401
+        : message === "FORBIDDEN"
+          ? 403
+          : 500;
+
+    return NextResponse.json({ message: getCouponErrorMessage(message) }, { status });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    await requireAdminSession();
+    const body = (await request.json()) as { couponId?: string };
+
+    await deleteCouponCode(body.couponId ?? "");
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "UNKNOWN_ERROR";
+    const status = ["COUPON_NOT_FOUND", "COUPON_ALREADY_REDEEMED"].includes(message)
       ? 400
       : message === "UNAUTHORIZED"
         ? 401

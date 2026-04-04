@@ -32,6 +32,7 @@ export function ActivateForm() {
 
       const result = (await response.json()) as {
         message?: string;
+        isAdmin?: boolean;
         session?: { email: string; expiresAt: string };
       };
 
@@ -41,9 +42,10 @@ export function ActivateForm() {
 
       setState({
         status: "success",
-        message: `${new Date(result.session.expiresAt).toLocaleString()}까지 로그인 상태가 유지됩니다.`,
+        message: `${new Date(result.session.expiresAt).toLocaleString("ko-KR")}까지 로그인 상태가 유지됩니다.`,
       });
-      router.push("/");
+
+      router.push(result.isAdmin ? "/admin/accounts" : "/");
       router.refresh();
     } catch (error) {
       setState({
@@ -66,10 +68,10 @@ export function ActivateForm() {
       <label>
         승인된 이메일
         <input
+          required
+          type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          type="email"
-          required
         />
       </label>
 

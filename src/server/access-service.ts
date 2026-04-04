@@ -436,6 +436,40 @@ export async function updateCouponCode(input: {
   return mapCouponCode(updated);
 }
 
+export async function deleteCouponCode(couponId: string) {
+  const db = await getDb();
+  const existing = await db.one<CouponCodeRow>(
+    `
+      SELECT
+        c.id,
+        c.code,
+        c.valid_days,
+        c.max_uses,
+        c.status,
+        c.created_at,
+        c.updated_at,
+        COUNT(r.id) AS redeemed_count
+      FROM coupon_codes c
+      LEFT JOIN coupon_redemptions r ON r.coupon_id = c.id
+      WHERE c.id = ?
+      GROUP BY c.id, c.code, c.valid_days, c.max_uses, c.status, c.created_at, c.updated_at
+      LIMIT 1
+    `,
+    [couponId],
+  );
+
+  if (!existing) {
+    throw new Error("COUPON_NOT_FOUND");
+  }
+
+  if (Number(existing.redeemed_count ?? 0) > 0) {
+    throw new Error("COUPON_ALREADY_REDEEMED");
+  }
+
+  await db.run("DELETE FROM coupon_codes WHERE id = ?", [couponId]);
+  return { ok: true as const };
+}
+
 export async function listSignupRequests() {
   const db = await getDb();
   const rows = await db.many<SignupRequestRow>(
@@ -820,6 +854,57 @@ export async function updateApprovedAccount(input: {
   }
 
   return updatedAccount;
+}
+
+export async function deleteApprovedAccount(input: { accountId: string; actorEmail: string }) {
+  await ensureConfiguredAdminAccounts();
+  const db = await getDb();
+  const existing = await db.one<ApprovedAccountRow>(
+    `
+    SELECT id, email, name, cohort, status, expires_at, created_at, updated_at
+    FROM approved_accounts
+    WHERE id = ?
+    LIMIT 1
+  `,
+    [input.accountId],
+  );
+
+  if (!existing) {
+    throw new Error("ACCOUNT_NOT_FOUND");
+  }
+
+  const normalizedTargetEmail = normalizeEmail(existing.email);
+  const normalizedActorEmail = normalizeEmail(input.actorEmail);
+
+  if (normalizedTargetEmail === normalizedActorEmail || getConfiguredAdminEmails().includes(normalizedTargetEmail)) {
+    throw new Error("ACCOUNT_DELETE_FORBIDDEN");
+  }
+
+  const [landingCountRow, couponUsageRow] = await Promise.all([
+    db.one<{ count: number | string }>(
+      "SELECT COUNT(*) AS count FROM landings WHERE lower(owner_email) = ?",
+      [normalizedTargetEmail],
+    ),
+    db.one<{ count: number | string }>(
+      "SELECT COUNT(*) AS count FROM coupon_redemptions WHERE approved_account_id = ?",
+      [input.accountId],
+    ),
+  ]);
+
+  if (Number(landingCountRow?.count ?? 0) > 0) {
+    throw new Error("ACCOUNT_HAS_LANDINGS");
+  }
+
+  if (Number(couponUsageRow?.count ?? 0) > 0) {
+    throw new Error("ACCOUNT_HAS_COUPON_USAGE");
+  }
+
+  await db.transaction(async (tx) => {
+    await tx.run("DELETE FROM creator_sessions WHERE approved_account_id = ?", [input.accountId]);
+    await tx.run("DELETE FROM approved_accounts WHERE id = ?", [input.accountId]);
+  });
+
+  return { ok: true as const };
 }
 
 export async function reviewSignupRequest(input: {

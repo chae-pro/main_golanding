@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createApprovedSession, SESSION_COOKIE_NAME } from "@/server/access-service";
+import { isAdminEmail } from "@/server/admin-auth";
 
 function getLoginErrorMessage(reason: string) {
   if (reason === "EMAIL_NOT_APPROVED") {
@@ -34,6 +35,7 @@ export async function POST(request: Request) {
       expiresAt: result.session.expiresAt,
       status: result.session.status,
     },
+    isAdmin: isAdminEmail(result.session.email),
     account: {
       id: result.account.id,
       email: result.account.email,

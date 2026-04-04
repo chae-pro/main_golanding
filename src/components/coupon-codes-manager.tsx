@@ -50,6 +50,7 @@ export function CouponCodesManager({
   const [rowState, setRowState] = useState<Record<string, SubmitState>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [savingCouponId, setSavingCouponId] = useState<string | null>(null);
+  const [deletingCouponId, setDeletingCouponId] = useState<string | null>(null);
   const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
 
   async function reloadCoupons() {
@@ -165,6 +166,48 @@ export function CouponCodesManager({
       }));
     } finally {
       setSavingCouponId(null);
+    }
+  }
+
+  async function deleteCoupon(couponId: string) {
+    if (!window.confirm("정말 이 쿠폰을 삭제하시겠습니까?")) {
+      return;
+    }
+
+    setDeletingCouponId(couponId);
+    setRowState((previous) => ({ ...previous, [couponId]: { status: "idle" } }));
+
+    try {
+      const response = await fetch("/api/admin/coupons", {
+        method: "DELETE",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ couponId }),
+      });
+      const result = (await response.json()) as { message?: string };
+
+      if (!response.ok) {
+        throw new Error(result.message ?? "쿠폰 삭제에 실패했습니다.");
+      }
+
+      await reloadCoupons();
+      setEditingCouponId(null);
+      setRowState((previous) => ({
+        ...previous,
+        [couponId]: { status: "success", message: "쿠폰을 삭제했습니다." },
+      }));
+      router.refresh();
+    } catch (error) {
+      setRowState((previous) => ({
+        ...previous,
+        [couponId]: {
+          status: "error",
+          message: error instanceof Error ? error.message : "쿠폰 삭제에 실패했습니다.",
+        },
+      }));
+    } finally {
+      setDeletingCouponId(null);
     }
   }
 
@@ -291,15 +334,33 @@ export function CouponCodesManager({
                       >
                         취소
                       </button>
+                      <button
+                        className="ghost-button admin-line-button"
+                        disabled={savingCouponId === coupon.id || deletingCouponId === coupon.id}
+                        onClick={() => void deleteCoupon(coupon.id)}
+                        type="button"
+                      >
+                        {deletingCouponId === coupon.id ? "삭제 중..." : "삭제"}
+                      </button>
                     </>
                   ) : (
-                    <button
-                      className="ghost-button admin-line-button"
-                      onClick={() => setEditingCouponId(coupon.id)}
-                      type="button"
-                    >
-                      수정
-                    </button>
+                    <>
+                      <button
+                        className="ghost-button admin-line-button"
+                        onClick={() => setEditingCouponId(coupon.id)}
+                        type="button"
+                      >
+                        수정
+                      </button>
+                      <button
+                        className="ghost-button admin-line-button"
+                        disabled={deletingCouponId === coupon.id}
+                        onClick={() => void deleteCoupon(coupon.id)}
+                        type="button"
+                      >
+                        {deletingCouponId === coupon.id ? "삭제 중..." : "삭제"}
+                      </button>
+                    </>
                   )}
                 </div>
 

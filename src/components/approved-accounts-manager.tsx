@@ -77,6 +77,16 @@ function mapSession(session: AdminCreatorSession): EditableSession {
   };
 }
 
+function getAccountStatusLabel(status: ApprovedAccount["status"]) {
+  if (status === "approved") {
+    return "승인됨";
+  }
+  if (status === "blocked") {
+    return "차단됨";
+  }
+  return "만료됨";
+}
+
 export function ApprovedAccountsManager({
   currentSessionId,
   initialAccounts,
@@ -107,6 +117,8 @@ export function ApprovedAccountsManager({
   const [sessionState, setSessionState] = useState<Record<string, SubmitState>>({});
   const [savingRowId, setSavingRowId] = useState<string | null>(null);
   const [revokingSessionId, setRevokingSessionId] = useState<string | null>(null);
+  const [editingAccountId, setEditingAccountId] = useState<string | null>(null);
+  const [deletingAccountId, setDeletingAccountId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
 
@@ -122,7 +134,7 @@ export function ApprovedAccountsManager({
     const result = (await response.json()) as { message?: string; accounts?: ApprovedAccount[] };
 
     if (!response.ok || !result.accounts) {
-      throw new Error(result.message ?? "계정 목록을 새로고침하지 못했습니다.");
+      throw new Error(result.message ?? "계정 목록을 불러오지 못했습니다.");
     }
 
     setAccounts(result.accounts.map(mapAccount));
@@ -139,7 +151,7 @@ export function ApprovedAccountsManager({
     };
 
     if (!response.ok || !result.sessions) {
-      throw new Error(result.message ?? "세션 목록을 새로고침하지 못했습니다.");
+      throw new Error(result.message ?? "세션 목록을 불러오지 못했습니다.");
     }
 
     setSessions(result.sessions.map(mapSession));
@@ -151,6 +163,11 @@ export function ApprovedAccountsManager({
         account.id === accountId ? { ...account, [field]: value } : account,
       ),
     );
+  }
+
+  async function cancelAccountEdit() {
+    await reloadAccounts();
+    setEditingAccountId(null);
   }
 
   async function createAccount(event: React.FormEvent<HTMLFormElement>) {
@@ -180,7 +197,7 @@ export function ApprovedAccountsManager({
         expiresAt: "",
       });
       await Promise.all([reloadAccounts(), reloadSessions()]);
-      setCreateState({ status: "success", message: "승인 계정이 추가되었습니다." });
+      setCreateState({ status: "success", message: "승인 계정을 추가했습니다." });
       router.refresh();
     } catch (error) {
       setCreateState({
@@ -223,6 +240,7 @@ export function ApprovedAccountsManager({
       }
 
       await Promise.all([reloadAccounts(), reloadSessions()]);
+      setEditingAccountId(null);
       setRowState((previous) => ({
         ...previous,
         [accountId]: { status: "success", message: "저장되었습니다." },
@@ -238,6 +256,44 @@ export function ApprovedAccountsManager({
       }));
     } finally {
       setSavingRowId(null);
+    }
+  }
+
+  async function deleteAccount(accountId: string) {
+    if (!window.confirm("정말 이 승인 계정을 삭제하시겠습니까?")) {
+      return;
+    }
+
+    setDeletingAccountId(accountId);
+    setRowState((previous) => ({ ...previous, [accountId]: { status: "idle" } }));
+
+    try {
+      const response = await fetch(`/api/admin/accounts/${accountId}`, {
+        method: "DELETE",
+      });
+      const result = (await response.json()) as { message?: string };
+
+      if (!response.ok) {
+        throw new Error(result.message ?? "계정 삭제에 실패했습니다.");
+      }
+
+      await Promise.all([reloadAccounts(), reloadSessions()]);
+      setEditingAccountId(null);
+      setRowState((previous) => ({
+        ...previous,
+        [accountId]: { status: "success", message: "계정을 삭제했습니다." },
+      }));
+      router.refresh();
+    } catch (error) {
+      setRowState((previous) => ({
+        ...previous,
+        [accountId]: {
+          status: "error",
+          message: error instanceof Error ? error.message : "계정 삭제에 실패했습니다.",
+        },
+      }));
+    } finally {
+      setDeletingAccountId(null);
     }
   }
 
@@ -304,7 +360,7 @@ export function ApprovedAccountsManager({
       await reloadSessions();
       setSessionState((previous) => ({
         ...previous,
-        [sessionId]: { status: "success", message: "세션이 종료되었습니다." },
+        [sessionId]: { status: "success", message: "세션을 종료했습니다." },
       }));
       router.refresh();
     } catch (error) {
@@ -331,6 +387,7 @@ export function ApprovedAccountsManager({
         <div className="admin-line-list">
           {accounts.map((account) => {
             const accountState = rowState[account.id];
+            const isEditing = editingAccountId === account.id;
 
             return (
               <article className="admin-line-row" key={account.id}>
@@ -340,57 +397,111 @@ export function ApprovedAccountsManager({
                     <span>생성일 {new Date(account.createdAt).toLocaleDateString("ko-KR")}</span>
                   </div>
 
-                  <label className="admin-inline-field">
-                    <span>이름</span>
-                    <input
-                      type="text"
-                      value={account.name}
-                      onChange={(event) => updateAccount(account.id, "name", event.target.value)}
-                    />
-                  </label>
+                  {isEditing ? (
+                    <label className="admin-inline-field">
+                      <span>이름</span>
+                      <input
+                        type="text"
+                        value={account.name}
+                        onChange={(event) => updateAccount(account.id, "name", event.target.value)}
+                      />
+                    </label>
+                  ) : (
+                    <div className="admin-line-info">{account.name || "-"}</div>
+                  )}
 
-                  <label className="admin-inline-field">
-                    <span>기수</span>
-                    <input
-                      type="text"
-                      value={account.cohort}
-                      onChange={(event) => updateAccount(account.id, "cohort", event.target.value)}
-                    />
-                  </label>
+                  {isEditing ? (
+                    <label className="admin-inline-field">
+                      <span>기수</span>
+                      <input
+                        type="text"
+                        value={account.cohort}
+                        onChange={(event) => updateAccount(account.id, "cohort", event.target.value)}
+                      />
+                    </label>
+                  ) : (
+                    <div className="admin-line-info">{account.cohort || "-"}</div>
+                  )}
 
-                  <label className="admin-inline-field admin-inline-field-select">
-                    <span>상태</span>
-                    <select
-                      value={account.status}
-                      onChange={(event) => updateAccount(account.id, "status", event.target.value)}
-                    >
-                      <option value="approved">승인됨</option>
-                      <option value="blocked">차단됨</option>
-                      <option value="expired">만료됨</option>
-                    </select>
-                  </label>
+                  {isEditing ? (
+                    <label className="admin-inline-field admin-inline-field-select">
+                      <span>상태</span>
+                      <select
+                        value={account.status}
+                        onChange={(event) => updateAccount(account.id, "status", event.target.value)}
+                      >
+                        <option value="approved">승인됨</option>
+                        <option value="blocked">차단됨</option>
+                        <option value="expired">만료됨</option>
+                      </select>
+                    </label>
+                  ) : (
+                    <div className="admin-line-info">{getAccountStatusLabel(account.status)}</div>
+                  )}
 
-                  <label className="admin-inline-field admin-inline-field-date">
-                    <span>만료일</span>
-                    <input
-                      type="date"
-                      value={account.expiresAt}
-                      onChange={(event) =>
-                        updateAccount(account.id, "expiresAt", event.target.value)
-                      }
-                    />
-                  </label>
+                  {isEditing ? (
+                    <label className="admin-inline-field admin-inline-field-date">
+                      <span>만료일</span>
+                      <input
+                        type="date"
+                        value={account.expiresAt}
+                        onChange={(event) =>
+                          updateAccount(account.id, "expiresAt", event.target.value)
+                        }
+                      />
+                    </label>
+                  ) : (
+                    <div className="admin-line-info">{account.expiresAt || "-"}</div>
+                  )}
                 </div>
 
                 <div className="admin-line-actions">
-                  <button
-                    className="ghost-button admin-line-button"
-                    disabled={savingRowId === account.id}
-                    onClick={() => void saveAccount(account.id)}
-                    type="button"
-                  >
-                    {savingRowId === account.id ? "저장 중..." : "저장"}
-                  </button>
+                  {isEditing ? (
+                    <>
+                      <button
+                        className="ghost-button admin-line-button"
+                        disabled={savingRowId === account.id}
+                        onClick={() => void saveAccount(account.id)}
+                        type="button"
+                      >
+                        {savingRowId === account.id ? "저장 중..." : "저장"}
+                      </button>
+                      <button
+                        className="ghost-button admin-line-button"
+                        disabled={savingRowId === account.id}
+                        onClick={() => void cancelAccountEdit()}
+                        type="button"
+                      >
+                        취소
+                      </button>
+                      <button
+                        className="ghost-button admin-line-button"
+                        disabled={savingRowId === account.id || deletingAccountId === account.id}
+                        onClick={() => void deleteAccount(account.id)}
+                        type="button"
+                      >
+                        {deletingAccountId === account.id ? "삭제 중..." : "삭제"}
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        className="ghost-button admin-line-button"
+                        onClick={() => setEditingAccountId(account.id)}
+                        type="button"
+                      >
+                        수정
+                      </button>
+                      <button
+                        className="ghost-button admin-line-button"
+                        disabled={deletingAccountId === account.id}
+                        onClick={() => void deleteAccount(account.id)}
+                        type="button"
+                      >
+                        {deletingAccountId === account.id ? "삭제 중..." : "삭제"}
+                      </button>
+                    </>
+                  )}
                 </div>
 
                 {accountState && accountState.status !== "idle" ? (
@@ -409,7 +520,7 @@ export function ApprovedAccountsManager({
           <span className="eyebrow">배포 점검</span>
           <h2>배포 준비 상태</h2>
           <p>
-            현재 환경: {initialReadiness.environment}. 운영 배포 전에 아래 항목을 점검하세요.
+            현재 환경: {initialReadiness.environment}. 운영 배포 전에 아래 항목을 확인하세요.
           </p>
         </div>
 
@@ -463,7 +574,7 @@ export function ApprovedAccountsManager({
           </div>
           <div className="detail-card">
             <strong>{initialOverview.recentVisitorCount}</strong>
-            <p>최근 7일 방문자</p>
+            <p>최근 7일 방문 수</p>
           </div>
           <div className="detail-card">
             <strong>{initialOverview.recentFormSubmissionCount}</strong>
@@ -546,7 +657,7 @@ export function ApprovedAccountsManager({
         <div className="section-heading">
           <span className="eyebrow">CSV 가져오기</span>
           <h2>승인 계정 일괄 추가</h2>
-          <p>열 순서는 email, name, cohort, expiresAt 입니다. 기존 이메일은 덮어쓰지 않고 건너뜁니다.</p>
+          <p>순서는 email, name, cohort, expiresAt 입니다. 기존 이메일은 덮어쓰지 않고 건너뜁니다.</p>
         </div>
 
         <form className="admin-create-form" onSubmit={importCsv}>
@@ -619,7 +730,7 @@ export function ApprovedAccountsManager({
                 <div className="admin-inline-list">
                   {csvResult.skipped.map((item) => (
                     <span key={`${item.rowNumber}-${item.email}`}>
-                      {item.rowNumber}행: {item.email} ({item.reason})
+                      {item.rowNumber}행 {item.email} ({item.reason})
                     </span>
                   ))}
                 </div>
@@ -632,7 +743,7 @@ export function ApprovedAccountsManager({
                 <div className="admin-inline-list">
                   {csvResult.errors.map((item) => (
                     <span key={`${item.rowNumber}-${item.raw}`}>
-                      {item.rowNumber}행: {item.reason}
+                      {item.rowNumber}행 {item.reason}
                     </span>
                   ))}
                 </div>
@@ -646,7 +757,7 @@ export function ApprovedAccountsManager({
         <div className="section-heading">
           <span className="eyebrow">세션</span>
           <h2>활성 제작자 세션 {sessions.length}건</h2>
-          <p>현재 로그인 중인 사용자를 확인하고 필요할 때 즉시 세션을 종료할 수 있습니다.</p>
+          <p>현재 로그인 중인 사용자를 확인하고 필요하면 즉시 세션을 종료할 수 있습니다.</p>
         </div>
 
         <div className="admin-account-list">
@@ -678,17 +789,17 @@ export function ApprovedAccountsManager({
 
                   <div className="grid-two">
                     <div className="detail-card">
-                      <strong>{new Date(session.lastValidatedAt).toLocaleString()}</strong>
+                      <strong>{new Date(session.lastValidatedAt).toLocaleString("ko-KR")}</strong>
                       <p>마지막 확인 시각</p>
                     </div>
                     <div className="detail-card">
-                      <strong>{new Date(session.expiresAt).toLocaleString()}</strong>
+                      <strong>{new Date(session.expiresAt).toLocaleString("ko-KR")}</strong>
                       <p>세션 만료 시각</p>
                     </div>
                   </div>
 
                   <div className="meta-row">
-                    <span>생성 시각 {new Date(session.createdAt).toLocaleString()}</span>
+                    <span>생성 시각 {new Date(session.createdAt).toLocaleString("ko-KR")}</span>
                     <span>세션 ID {session.id}</span>
                   </div>
 
@@ -708,7 +819,6 @@ export function ApprovedAccountsManager({
           )}
         </div>
       </section>
-
     </div>
   );
 }
