@@ -154,7 +154,7 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
           </div>
 
           <button
-            className="ghost-button dashboard-inline-button"
+            className="ghost-button dashboard-inline-button dashboard-inline-button-center"
             disabled={!item.isPublished}
             onClick={() => (item.isPublished ? void copyPublicLink(item.publicSlug) : undefined)}
             type="button"
@@ -174,7 +174,7 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
           </Link>
 
           <button
-            className="ghost-button dashboard-inline-button"
+            className="ghost-button dashboard-inline-button dashboard-inline-button-center"
             disabled={duplicatingId === item.id}
             onClick={() => void duplicateRow(item)}
             type="button"
