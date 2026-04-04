@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { DashboardLandingList } from "@/components/dashboard-landing-list";
 import { getLandingMetrics } from "@/server/analytics-service";
 import { isAdminEmail } from "@/server/admin-auth";
 import { listLandingsByOwner } from "@/server/landing-service";
@@ -58,7 +59,7 @@ export default async function HomePage() {
             </Link>
             {auth ? null : (
               <Link className="ghost-button" href="/signup">
-                가입 신청
+                회원가입
               </Link>
             )}
             {adminAccess ? (
@@ -107,47 +108,19 @@ export default async function HomePage() {
 
         {auth ? (
           landingMetrics.length > 0 ? (
-            <div className="list-grid">
-              {landingMetrics.map(({ landing, metrics }) => (
-                <article className="list-item" key={landing.id}>
-                  <div>
-                    <h3>{landing.title}</h3>
-                    <div className="meta-row">
-                      <span>{getLandingTypeLabel(landing.type)}</span>
-                      <span>{getLandingStatusLabel(landing.status)}</span>
-                      <span>{landing.publicSlug}</span>
-                    </div>
-                  </div>
-
-                  <p>{landing.description || "아직 설명이 없습니다."}</p>
-
-                  <div className="metrics-grid">
-                    <div className="detail-card">
-                      <strong>{metrics.visitorCount}</strong>
-                      <p>방문자</p>
-                    </div>
-                    <div className="detail-card">
-                      <strong>{metrics.totalClickCount}</strong>
-                      <p>클릭 수</p>
-                    </div>
-                  </div>
-
-                  <div className="link-row">
-                    {landing.status === "published" ? (
-                      <Link className="text-link" href={`/l/${landing.publicSlug}`}>
-                        공개 페이지
-                      </Link>
-                    ) : null}
-                    <Link className="text-link" href={`/landings/${landing.id}`}>
-                      상세
-                    </Link>
-                    <Link className="text-link" href={`/analysis/${landing.id}`}>
-                      분석
-                    </Link>
-                  </div>
-                </article>
-              ))}
-            </div>
+            <DashboardLandingList
+              items={landingMetrics.map(({ landing, metrics }) => ({
+                id: landing.id,
+                title: landing.title,
+                typeLabel: getLandingTypeLabel(landing.type),
+                statusLabel: getLandingStatusLabel(landing.status),
+                publicSlug: landing.publicSlug,
+                description: landing.description,
+                visitorCount: metrics.visitorCount,
+                clickCount: metrics.totalClickCount,
+                isPublished: landing.status === "published",
+              }))}
+            />
           ) : (
             <div className="detail-card">
               <strong>아직 랜딩이 없습니다</strong>
