@@ -611,7 +611,7 @@ textarea {
 
 .scroll-map-row {
   display: grid;
-  grid-template-columns: 100px 1fr 170px;
+  grid-template-columns: 100px 1fr 116px;
   gap: 12px;
   align-items: center;
 }
@@ -631,7 +631,7 @@ textarea {
 
 .scroll-map-meta {
   display: grid;
-  grid-template-columns: 40px minmax(68px, auto);
+  grid-template-columns: 40px minmax(52px, auto);
   gap: 4px 10px;
   justify-content: end;
   align-items: center;

@@ -95,10 +95,6 @@ function getDwellSummaryStyle(rank: number, total: number, hasPositiveValue: boo
   };
 }
 
-function formatSeconds(value: number) {
-  return `${value.toFixed(1)}초`;
-}
-
 export function AnalysisVisuals({
   landing,
   visuals,
@@ -224,8 +220,6 @@ export function AnalysisVisuals({
               <div className="scroll-map-meta">
                 <span className="scroll-map-meta-label">비율</span>
                 <span className="scroll-map-meta-value">{section.reachRate}%</span>
-                <span className="scroll-map-meta-label">시간</span>
-                <span className="scroll-map-meta-value">{formatSeconds(section.avgDwellSeconds)}</span>
               </div>
             </div>
           ))}
