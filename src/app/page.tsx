@@ -98,7 +98,7 @@ export default async function HomePage() {
       <section className="panel list-panel">
         <div className="section-heading">
           <span className="eyebrow">랜딩 목록</span>
-          <h2>{auth ? "내 랜딩" : "로그인 후 내 랜딩을 확인할 수 있습니다"}</h2>
+          <h2>{auth ? "생성된 랜딩페이지" : "로그인 후 생성된 랜딩페이지를 확인할 수 있습니다"}</h2>
           <p>
             {auth
               ? "현재 로그인한 계정 기준으로 내 랜딩만 표시됩니다."

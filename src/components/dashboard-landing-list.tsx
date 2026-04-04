@@ -30,53 +30,45 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
   return (
     <div className="dashboard-landing-list">
       {items.map((item) => (
-        <article className="dashboard-landing-row" key={item.id}>
-          <div className="dashboard-landing-main">
-            <div className="dashboard-landing-heading">
-              <h3>{item.title}</h3>
-              <div className="meta-row">
-                <span>{item.typeLabel}</span>
-                <span>{item.statusLabel}</span>
-                <span>{item.publicSlug}</span>
-              </div>
-            </div>
+        <article className="dashboard-landing-bar" key={item.id}>
+          <Link className="dashboard-landing-title" href={`/landings/${item.id}`}>
+            {item.title}
+          </Link>
 
-            <p>{item.description || "아직 설명이 없습니다."}</p>
+          <div className="dashboard-landing-info">랜딩형식 - {item.typeLabel}</div>
+
+          <div className="dashboard-landing-info">
+            방문자 <strong>{item.visitorCount}</strong>
           </div>
 
-          <div className="dashboard-landing-stats">
-            <div className="dashboard-landing-stat">
-              <strong>{item.visitorCount}</strong>
-              <span>방문자</span>
-            </div>
-            <div className="dashboard-landing-stat">
-              <strong>{item.clickCount}</strong>
-              <span>클릭 수</span>
-            </div>
+          <div className="dashboard-landing-info">
+            클릭수 <strong>{item.clickCount}</strong>
           </div>
 
-          <div className="dashboard-landing-actions">
-            {item.isPublished ? (
-              <>
-                <Link className="ghost-button" href={`/l/${item.publicSlug}`}>
-                  공개 페이지
-                </Link>
-                <button
-                  className="ghost-button"
-                  onClick={() => void copyPublicLink(item.publicSlug)}
-                  type="button"
-                >
-                  {copiedSlug === item.publicSlug ? "복사됨" : "링크 복사"}
-                </button>
-              </>
-            ) : null}
+          <button
+            className="ghost-button dashboard-inline-button"
+            disabled={!item.isPublished}
+            onClick={() => (item.isPublished ? void copyPublicLink(item.publicSlug) : undefined)}
+            type="button"
+          >
+            {item.isPublished
+              ? copiedSlug === item.publicSlug
+                ? "복사됨"
+                : "링크복사"
+              : "발행전"}
+          </button>
 
-            <Link className="ghost-button" href={`/landings/${item.id}`}>
-              상세
-            </Link>
-            <Link className="primary-button dashboard-analysis-button" href={`/analysis/${item.id}`}>
-              분석
-            </Link>
+          <Link className="primary-button dashboard-inline-button" href={`/analysis/${item.id}`}>
+            분석
+          </Link>
+
+          <div
+            className={`dashboard-status-toggle ${
+              item.isPublished ? "dashboard-status-toggle-on" : "dashboard-status-toggle-off"
+            }`}
+          >
+            <span className="dashboard-status-track" />
+            <strong>{item.isPublished ? "사용 중" : item.statusLabel}</strong>
           </div>
         </article>
       ))}
