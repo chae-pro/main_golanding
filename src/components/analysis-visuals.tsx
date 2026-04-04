@@ -39,9 +39,12 @@ export function AnalysisVisuals({
     <>
       <section className="list-panel">
         <div className="section-heading">
-          <span className="eyebrow">클릭 히트맵</span>
+          <span className="eyebrow">체류 오버레이 + 클릭 히트맵</span>
           <h2>랜딩 이미지 오버레이</h2>
-          <p>실제 클릭 좌표와 20구간 체류 강도를 랜딩 이미지 위에 직접 겹쳐서 표시합니다.</p>
+          <p>
+            오버레이 숫자는 각 세션을 100%로 정규화한 뒤 평균한 체류 비율입니다. 클릭 좌표는
+            같은 이미지 위에 겹쳐서 표시합니다.
+          </p>
         </div>
 
         <div className="analysis-preview">
@@ -86,9 +89,12 @@ export function AnalysisVisuals({
 
       <section className="list-panel">
         <div className="section-heading">
-          <span className="eyebrow">스크롤맵</span>
+          <span className="eyebrow">스크롤 도달률</span>
           <h2>20구간 도달률</h2>
-          <p>각 구간이 화면에 한 번이라도 보인 세션 비율을 기준으로 계산합니다.</p>
+          <p>
+            이 값은 체류 비율이 아니라, 해당 구간이 화면에 한 번이라도 보인 세션 비율입니다.
+            그래서 세션 수가 적으면 20%, 40%처럼 계단형으로 보일 수 있습니다.
+          </p>
         </div>
 
         <div className="scroll-map-list">
@@ -98,7 +104,12 @@ export function AnalysisVisuals({
               <div className="scroll-map-track">
                 <div className="scroll-map-fill" style={{ width: `${section.reachRate}%` }} />
               </div>
-              <span>{section.reachRate}%</span>
+              <div className="scroll-map-meta">
+                <span>{section.reachRate}%</span>
+                <small>
+                  {section.reachedSessionCount}/{section.totalSessionCount}세션
+                </small>
+              </div>
             </div>
           ))}
         </div>

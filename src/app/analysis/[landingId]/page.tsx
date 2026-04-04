@@ -87,7 +87,10 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
         <div className="section-heading">
           <span className="eyebrow">정규화 체류맵</span>
           <h2>20구간 정규화 보기</h2>
-          <p>각 세션을 100%로 정규화한 뒤 평균한 체류 비율입니다. 합계는 100% 근처가 됩니다.</p>
+          <p>
+            각 세션을 100%로 정규화한 뒤 평균한 체류 비율입니다. 위의 도달률과는 다른 지표이며,
+            합계는 100% 근처가 됩니다.
+          </p>
         </div>
 
         <div className="dwell-grid">

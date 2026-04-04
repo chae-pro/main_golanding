@@ -222,6 +222,8 @@ export type HeatmapPoint = {
 export type ScrollSectionMetric = {
   section: number;
   reachRate: number;
+  reachedSessionCount: number;
+  totalSessionCount: number;
 };
 
 export type LandingAnalysisVisuals = {
