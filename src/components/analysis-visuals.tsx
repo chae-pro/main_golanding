@@ -16,28 +16,28 @@ function getHeatmapPointClass(targetType: "page" | "cta" | "form") {
 
 function getDwellOverlayStyle(value: number, index: number) {
   const normalized = Math.min(Math.max(value / 100, 0), 1);
-  const opacity = normalized > 0 ? 0.28 + normalized * 0.68 : 0.1;
+  const opacity = normalized > 0 ? 0.38 + normalized * 0.78 : 0.14;
 
   return {
     top: `${(index / 20) * 100}%`,
     height: `${100 / 20}%`,
     background: `linear-gradient(90deg,
-      rgba(220, 38, 38, ${opacity}),
-      rgba(220, 38, 38, ${Math.max(opacity * 0.76, 0.16)}) 62%,
-      rgba(220, 38, 38, ${Math.max(opacity * 0.56, 0.12)}) 100%)`,
-    boxShadow: `inset 0 0 0 1px rgba(255, 255, 255, ${Math.max(opacity * 0.18, 0.06)})`,
+      rgba(185, 28, 28, ${opacity}),
+      rgba(220, 38, 38, ${Math.max(opacity * 0.88, 0.28)}) 62%,
+      rgba(239, 68, 68, ${Math.max(opacity * 0.7, 0.2)}) 100%)`,
+    boxShadow: `inset 0 0 0 1px rgba(255, 255, 255, ${Math.max(opacity * 0.22, 0.08)})`,
   };
 }
 
 function getDwellSummaryStyle(value: number) {
   const normalized = Math.min(Math.max(value / 100, 0), 1);
-  const opacity = normalized > 0 ? 0.2 + normalized * 0.55 : 0.08;
+  const opacity = normalized > 0 ? 0.3 + normalized * 0.68 : 0.12;
 
   return {
     background: `linear-gradient(135deg,
-      rgba(248, 113, 113, ${Math.max(opacity * 1.1, 0.16)}),
-      rgba(220, 38, 38, ${Math.max(opacity * 0.72, 0.12)}))`,
-    borderColor: `rgba(255, 255, 255, ${Math.max(opacity * 0.5, 0.16)})`,
+      rgba(252, 165, 165, ${Math.max(opacity * 0.95, 0.22)}),
+      rgba(220, 38, 38, ${Math.max(opacity * 0.9, 0.2)}))`,
+    borderColor: `rgba(255, 255, 255, ${Math.max(opacity * 0.58, 0.2)})`,
   };
 }
 
