@@ -100,7 +100,7 @@ export function ApprovedAccountsManager({
   initialOverview: AdminOverviewMetrics;
   initialReadiness: DeploymentReadiness;
   initialSessions: AdminCreatorSession[];
-  variant?: "full" | "accounts-only";
+  variant?: "full" | "accounts-only" | "admin-only";
 }) {
   const router = useRouter();
   const [accounts, setAccounts] = useState(() => initialAccounts.map(mapAccount));
@@ -380,6 +380,7 @@ export function ApprovedAccountsManager({
 
   return (
     <div className="admin-stack">
+      {variant !== "admin-only" ? (
       <section className="panel list-panel">
         <div className="section-heading">
           <span className="eyebrow">계정</span>
@@ -516,8 +517,9 @@ export function ApprovedAccountsManager({
           })}
         </div>
       </section>
+      ) : null}
 
-      {variant === "full" ? (
+      {variant !== "accounts-only" ? (
         <>
           <section className="panel list-panel">
             <div className="section-heading">
