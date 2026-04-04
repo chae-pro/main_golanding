@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { reviewSignupRequest } from "@/server/access-service";
+import { deleteSignupRequest, reviewSignupRequest } from "@/server/access-service";
 import { requireAdminSession } from "@/server/admin-auth";
 
 function getReviewErrorMessage(message: string) {
@@ -9,6 +9,12 @@ function getReviewErrorMessage(message: string) {
   }
   if (message === "SIGNUP_REQUEST_ALREADY_REVIEWED") {
     return "이미 처리된 가입 신청입니다.";
+  }
+  if (message === "UNAUTHORIZED") {
+    return "로그인이 필요합니다.";
+  }
+  if (message === "FORBIDDEN") {
+    return "권한이 없습니다.";
   }
 
   return "가입 신청 처리에 실패했습니다.";
@@ -36,13 +42,38 @@ export async function PATCH(
 
     return NextResponse.json({ signupRequest });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "가입 신청 처리에 실패했습니다.";
+    const message = error instanceof Error ? error.message : "UNKNOWN_ERROR";
     const status =
       message === "UNAUTHORIZED"
         ? 401
         : message === "FORBIDDEN"
           ? 403
           : ["SIGNUP_REQUEST_NOT_FOUND", "SIGNUP_REQUEST_ALREADY_REVIEWED"].includes(message)
+            ? 400
+            : 500;
+
+    return NextResponse.json({ message: getReviewErrorMessage(message) }, { status });
+  }
+}
+
+export async function DELETE(
+  _request: Request,
+  context: { params: Promise<{ requestId: string }> },
+) {
+  try {
+    await requireAdminSession();
+    const { requestId } = await context.params;
+
+    await deleteSignupRequest(requestId);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "UNKNOWN_ERROR";
+    const status =
+      message === "UNAUTHORIZED"
+        ? 401
+        : message === "FORBIDDEN"
+          ? 403
+          : message === "SIGNUP_REQUEST_NOT_FOUND"
             ? 400
             : 500;
 

@@ -29,6 +29,7 @@ export function SignupRequestsManager({
   const [signupRequests, setSignupRequests] = useState(initialSignupRequests);
   const [rowState, setRowState] = useState<Record<string, SubmitState>>({});
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function reloadSignupRequests() {
     const response = await fetch("/api/admin/signup-requests", {
@@ -70,7 +71,7 @@ export function SignupRequestsManager({
         ...previous,
         [requestId]: {
           status: "success",
-          message: action === "approve" ? "승인되었습니다." : "반려되었습니다.",
+          message: action === "approve" ? "승인했습니다." : "반려했습니다.",
         },
       }));
       router.refresh();
@@ -84,6 +85,43 @@ export function SignupRequestsManager({
       }));
     } finally {
       setProcessingId(null);
+    }
+  }
+
+  async function deleteRequest(requestId: string) {
+    if (!window.confirm("정말 이 가입 신청 내역을 삭제하시겠습니까?")) {
+      return;
+    }
+
+    setDeletingId(requestId);
+    setRowState((previous) => ({ ...previous, [requestId]: { status: "idle" } }));
+
+    try {
+      const response = await fetch(`/api/admin/signup-requests/${requestId}`, {
+        method: "DELETE",
+      });
+      const result = (await response.json()) as { message?: string };
+
+      if (!response.ok) {
+        throw new Error(result.message ?? "가입 신청 삭제에 실패했습니다.");
+      }
+
+      await reloadSignupRequests();
+      setRowState((previous) => ({
+        ...previous,
+        [requestId]: { status: "success", message: "가입 신청을 삭제했습니다." },
+      }));
+      router.refresh();
+    } catch (error) {
+      setRowState((previous) => ({
+        ...previous,
+        [requestId]: {
+          status: "error",
+          message: error instanceof Error ? error.message : "가입 신청 삭제에 실패했습니다.",
+        },
+      }));
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -143,6 +181,15 @@ export function SignupRequestsManager({
                       반려
                     </button>
                   ) : null}
+
+                  <button
+                    className="ghost-button admin-line-button"
+                    disabled={deletingId === request.id}
+                    onClick={() => void deleteRequest(request.id)}
+                    type="button"
+                  >
+                    {deletingId === request.id ? "삭제 중..." : "삭제"}
+                  </button>
                 </div>
 
                 {state && state.status !== "idle" ? (

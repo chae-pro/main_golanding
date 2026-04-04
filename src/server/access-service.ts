@@ -1000,6 +1000,26 @@ export async function reviewSignupRequest(input: {
   return updated ? mapSignupRequest(updated) : null;
 }
 
+export async function deleteSignupRequest(requestId: string) {
+  const db = await getDb();
+  const existing = await db.one<SignupRequestRow>(
+    `
+      SELECT id, email, name, cohort, coupon, note, status, created_at, updated_at
+      FROM signup_requests
+      WHERE id = ?
+      LIMIT 1
+    `,
+    [requestId],
+  );
+
+  if (!existing) {
+    throw new Error("SIGNUP_REQUEST_NOT_FOUND");
+  }
+
+  await db.run("DELETE FROM signup_requests WHERE id = ?", [requestId]);
+  return { ok: true as const };
+}
+
 export async function listSessions() {
   await ensureConfiguredAdminAccounts();
   const db = await getDb();
