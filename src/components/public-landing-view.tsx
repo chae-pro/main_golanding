@@ -320,12 +320,6 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
             borderRadius: `${landing.theme.radius}px`,
           }}
         >
-          <div className="section-heading">
-            <span className="eyebrow">버튼 영역</span>
-            <h2>{landing.title}</h2>
-            <p>{landing.description || "아래 버튼을 눌러 다음 단계로 이동해보세요."}</p>
-          </div>
-
           <div className="public-cta-grid">
             {orderedButtons.map((button) => (
               <a
