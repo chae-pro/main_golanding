@@ -25,7 +25,9 @@ function getRankStrength(rank: number, total: number, hasPositiveValue: boolean)
     return 1;
   }
 
-  return (clampedTotal - rank) / (clampedTotal - 1);
+  const linear = (clampedTotal - rank) / (clampedTotal - 1);
+
+  return Math.pow(linear, 0.65);
 }
 
 function mixChannel(from: number, to: number, ratio: number) {
@@ -62,7 +64,7 @@ function getDwellRanks(values: number[]) {
 function getDwellOverlayStyle(rank: number, total: number, hasPositiveValue: boolean, index: number) {
   const strength = getRankStrength(rank, total, hasPositiveValue);
   const color = getRankColor(rank, total, hasPositiveValue);
-  const opacity = hasPositiveValue ? 0.08 + strength * 0.42 : 0.04;
+  const opacity = hasPositiveValue ? 0.18 + strength * 0.3 : 0.04;
 
   return {
     top: `${(index / 20) * 100}%`,
@@ -75,14 +77,21 @@ function getDwellOverlayStyle(rank: number, total: number, hasPositiveValue: boo
 function getDwellSummaryStyle(rank: number, total: number, hasPositiveValue: boolean) {
   const strength = getRankStrength(rank, total, hasPositiveValue);
   const color = getRankColor(rank, total, hasPositiveValue);
-  const opacity = hasPositiveValue ? 0.18 + strength * 0.3 : 0.06;
 
   return {
-    backgroundColor: `rgba(${color.red}, ${color.green}, ${color.blue}, ${opacity})`,
-    borderColor: `rgba(${Math.max(color.red - 20, 0)}, ${Math.max(color.green - 6, 0)}, ${Math.max(
-      color.blue - 4,
-      0,
-    )}, ${0.12 + strength * 0.2})`,
+    backgroundColor: hasPositiveValue
+      ? `rgb(${color.red}, ${color.green}, ${color.blue})`
+      : "rgb(255, 255, 255)",
+    borderColor: hasPositiveValue
+      ? `rgba(${Math.max(color.red - 28, 0)}, ${Math.max(color.green - 8, 0)}, ${Math.max(
+          color.blue - 6,
+          0,
+        )}, ${0.22 + strength * 0.28})`
+      : "rgba(15, 23, 42, 0.08)",
+    color: strength >= 0.52 ? "#ffffff" : "#7f1d1d",
+    labelBackground: strength >= 0.52 ? "rgba(255, 255, 255, 0.16)" : "rgba(255, 228, 230, 0.96)",
+    labelColor: strength >= 0.52 ? "#ffffff" : "#7f1d1d",
+    valueShadow: strength >= 0.52 ? "0 1px 0 rgba(0, 0, 0, 0.12)" : "0 1px 0 rgba(255, 255, 255, 0.25)",
   };
 }
 
@@ -156,18 +165,44 @@ export function AnalysisVisuals({
 
             <div className="analysis-section-summary" aria-hidden="true">
               {visuals.dwellSections.map((value, index) => (
-                <div
-                  className="analysis-section-summary-cell"
-                  key={`${landing.id}-dwell-summary-${index + 1}`}
-                  style={getDwellSummaryStyle(
+                (() => {
+                  const summaryStyle = getDwellSummaryStyle(
                     dwellRanks[index],
                     visuals.dwellSections.length,
                     value > 0 && highestDwellValue > 0,
-                  )}
-                >
-                  <span className="analysis-section-summary-label">{index + 1}구간</span>
-                  <strong className="analysis-section-summary-value">{value}%</strong>
-                </div>
+                  );
+
+                  return (
+                    <div
+                      className="analysis-section-summary-cell"
+                      key={`${landing.id}-dwell-summary-${index + 1}`}
+                      style={{
+                        backgroundColor: summaryStyle.backgroundColor,
+                        borderColor: summaryStyle.borderColor,
+                        color: summaryStyle.color,
+                      }}
+                    >
+                      <span
+                        className="analysis-section-summary-label"
+                        style={{
+                          background: summaryStyle.labelBackground,
+                          color: summaryStyle.labelColor,
+                        }}
+                      >
+                        {index + 1}구간
+                      </span>
+                      <strong
+                        className="analysis-section-summary-value"
+                        style={{
+                          color: summaryStyle.color,
+                          textShadow: summaryStyle.valueShadow,
+                        }}
+                      >
+                        {value}%
+                      </strong>
+                    </div>
+                  );
+                })()
               ))}
             </div>
           </div>
