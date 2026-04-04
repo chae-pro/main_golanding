@@ -469,6 +469,9 @@ textarea {
 
 .analysis-preview-stack {
   position: relative;
+  display: block;
+  width: 100%;
+  min-width: 100%;
 }
 
 .analysis-preview-image {
@@ -479,6 +482,8 @@ textarea {
 .analysis-section-overlay {
   position: absolute;
   inset: 0;
+  width: 100%;
+  min-width: 100%;
   pointer-events: none;
 }
 
@@ -486,6 +491,7 @@ textarea {
   position: absolute;
   left: 0;
   right: 0;
+  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
