@@ -66,6 +66,7 @@ CREATE TABLE IF NOT EXISTS landings (
   public_slug TEXT NOT NULL UNIQUE,
   status TEXT NOT NULL,
   description TEXT,
+  meta_pixel_id TEXT,
   primary_color TEXT NOT NULL,
   text_color TEXT NOT NULL,
   surface_color TEXT NOT NULL,

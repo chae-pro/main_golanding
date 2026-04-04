@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS landings (
   public_slug TEXT NOT NULL UNIQUE,
   status TEXT NOT NULL,
   description TEXT,
+  meta_pixel_id TEXT,
   primary_color TEXT NOT NULL,
   text_color TEXT NOT NULL,
   surface_color TEXT NOT NULL,
@@ -161,3 +162,6 @@ ALTER TABLE visitor_sessions
 
 ALTER TABLE visitor_sessions
   ADD COLUMN IF NOT EXISTS max_visible_section_index INTEGER NOT NULL DEFAULT 1;
+
+ALTER TABLE landings
+  ADD COLUMN IF NOT EXISTS meta_pixel_id TEXT;

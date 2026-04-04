@@ -61,6 +61,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     const message = error instanceof Error ? error.message : "상태 변경에 실패했습니다.";
     const status =
       message === "LANDING_NOT_FOUND" ? 404 : message === "FORBIDDEN" ? 403 : 401;
+
     return NextResponse.json(
       {
         message:
@@ -111,7 +112,10 @@ export async function PUT(request: Request, context: RouteContext) {
           ? 403
           : message === "PUBLIC_SLUG_ALREADY_EXISTS"
             ? 409
-            : 401;
+            : message === "META_PIXEL_ID_INVALID"
+              ? 400
+              : 401;
+
     return NextResponse.json(
       {
         message:
@@ -121,7 +125,9 @@ export async function PUT(request: Request, context: RouteContext) {
               ? "접근 권한이 없습니다."
               : message === "PUBLIC_SLUG_ALREADY_EXISTS"
                 ? "이미 사용 중인 공개 슬러그입니다."
-                : message,
+                : message === "META_PIXEL_ID_INVALID"
+                  ? "메타 픽셀 ID는 숫자만 입력할 수 있습니다."
+                  : message,
       },
       { status },
     );

@@ -34,6 +34,7 @@ type LandingRow = {
   public_slug: string;
   status: Landing["status"];
   description: string | null;
+  meta_pixel_id: string | null;
   primary_color: string;
   text_color: string;
   surface_color: string;
@@ -45,6 +46,22 @@ type LandingRow = {
 
 function sortByOrder<T extends { sortOrder: number }>(items: T[]) {
   return [...items].sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+function normalizeMetaPixelId(value?: string | null) {
+  const trimmed = value?.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  const digitsOnly = trimmed.replace(/\D/g, "");
+
+  if (!digitsOnly) {
+    throw new Error("META_PIXEL_ID_INVALID");
+  }
+
+  return digitsOnly;
 }
 
 async function isPublicSlugTaken(publicSlug: string) {
@@ -165,6 +182,7 @@ async function mapLanding(row: LandingRow): Promise<Landing> {
     publicSlug: row.public_slug,
     status: row.status,
     description: row.description ?? undefined,
+    metaPixelId: row.meta_pixel_id ?? undefined,
     theme: {
       primaryColor: row.primary_color,
       textColor: row.text_color,
@@ -186,7 +204,7 @@ export async function listLandings() {
   const rows = await db.many<LandingRow>(
     `
       SELECT id, owner_email, type, title, public_slug, status, description,
-             primary_color, text_color, surface_color, radius, html_source,
+             meta_pixel_id, primary_color, text_color, surface_color, radius, html_source,
              created_at, updated_at
       FROM landings
       ORDER BY created_at DESC
@@ -201,7 +219,7 @@ export async function listLandingsByOwner(ownerEmail: string) {
   const rows = await db.many<LandingRow>(
     `
       SELECT id, owner_email, type, title, public_slug, status, description,
-             primary_color, text_color, surface_color, radius, html_source,
+             meta_pixel_id, primary_color, text_color, surface_color, radius, html_source,
              created_at, updated_at
       FROM landings
       WHERE lower(owner_email) = ?
@@ -218,7 +236,7 @@ export async function getLandingById(id: string) {
   const row = await db.one<LandingRow>(
     `
       SELECT id, owner_email, type, title, public_slug, status, description,
-             primary_color, text_color, surface_color, radius, html_source,
+             meta_pixel_id, primary_color, text_color, surface_color, radius, html_source,
              created_at, updated_at
       FROM landings
       WHERE id = ?
@@ -235,7 +253,7 @@ export async function getLandingByPublicSlug(publicSlug: string) {
   const row = await db.one<LandingRow>(
     `
       SELECT id, owner_email, type, title, public_slug, status, description,
-             primary_color, text_color, surface_color, radius, html_source,
+             meta_pixel_id, primary_color, text_color, surface_color, radius, html_source,
              created_at, updated_at
       FROM landings
       WHERE public_slug = ?
@@ -259,15 +277,16 @@ export async function createLanding(input: LandingCreateInput) {
   const images = sortByOrder(input.images);
   const buttons = sortByOrder(input.buttons);
   const fields = sortByOrder(input.formFields);
+  const metaPixelId = normalizeMetaPixelId(input.metaPixelId);
 
   await db.transaction(async (tx) => {
     await tx.run(
       `
       INSERT INTO landings (
         id, owner_email, type, title, public_slug, status, description,
-        primary_color, text_color, surface_color, radius, html_source,
+        meta_pixel_id, primary_color, text_color, surface_color, radius, html_source,
         created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
       [
         landingId,
@@ -277,6 +296,7 @@ export async function createLanding(input: LandingCreateInput) {
         input.publicSlug,
         "draft",
         input.description ?? null,
+        metaPixelId,
         input.theme.primaryColor,
         input.theme.textColor,
         input.theme.surfaceColor,
@@ -344,6 +364,7 @@ export async function duplicateLanding(input: { landingId: string; ownerEmail: s
     title: `${source.title} 복사본`,
     publicSlug: await ensureUniquePublicSlug(source.publicSlug),
     description: source.description,
+    metaPixelId: source.metaPixelId,
     theme: source.theme,
     images: source.images.map((image) => ({
       ...image,
@@ -423,12 +444,13 @@ export async function updateLanding(input: LandingUpdateInput) {
   const images = sortByOrder(input.images);
   const buttons = sortByOrder(input.buttons);
   const fields = sortByOrder(input.formFields);
+  const metaPixelId = normalizeMetaPixelId(input.metaPixelId);
 
   await db.transaction(async (tx) => {
     await tx.run(
       `
       UPDATE landings
-      SET type = ?, title = ?, public_slug = ?, description = ?,
+      SET type = ?, title = ?, public_slug = ?, description = ?, meta_pixel_id = ?,
           primary_color = ?, text_color = ?, surface_color = ?, radius = ?,
           html_source = ?, updated_at = ?
       WHERE id = ?
@@ -438,6 +460,7 @@ export async function updateLanding(input: LandingUpdateInput) {
         input.title,
         input.publicSlug,
         input.description ?? null,
+        metaPixelId,
         input.theme.primaryColor,
         input.theme.textColor,
         input.theme.surfaceColor,

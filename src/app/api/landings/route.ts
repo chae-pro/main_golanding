@@ -52,9 +52,22 @@ export async function POST(request: Request) {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "랜딩 생성 중 알 수 없는 오류가 발생했습니다.";
-    const status = message === "PUBLIC_SLUG_ALREADY_EXISTS" ? 409 : 401;
+    const status =
+      message === "PUBLIC_SLUG_ALREADY_EXISTS"
+        ? 409
+        : message === "META_PIXEL_ID_INVALID"
+          ? 400
+          : 401;
+
     return NextResponse.json(
-      { message: message === "PUBLIC_SLUG_ALREADY_EXISTS" ? "이미 사용 중인 공개 슬러그입니다." : message },
+      {
+        message:
+          message === "PUBLIC_SLUG_ALREADY_EXISTS"
+            ? "이미 사용 중인 공개 슬러그입니다."
+            : message === "META_PIXEL_ID_INVALID"
+              ? "메타 픽셀 ID는 숫자만 입력할 수 있습니다."
+              : message,
+      },
       { status },
     );
   }

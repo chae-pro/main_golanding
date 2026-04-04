@@ -67,6 +67,7 @@ export type Landing = {
   publicSlug: string;
   status: "draft" | "published" | "archived";
   description?: string;
+  metaPixelId?: string;
   theme: ThemeConfig;
   images: LandingImage[];
   buttons: LandingButton[];
@@ -168,6 +169,7 @@ export type LandingCreateInput = {
   title: string;
   publicSlug: string;
   description?: string;
+  metaPixelId?: string;
   theme: ThemeConfig;
   images: LandingImage[];
   buttons: LandingButton[];

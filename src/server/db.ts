@@ -249,6 +249,13 @@ async function ensureSignupRequestCouponColumn(db: DbClient) {
   );
 }
 
+async function ensureLandingMetaPixelColumn(db: DbClient) {
+  await execIgnoreAlreadyExists(
+    db,
+    "ALTER TABLE landings ADD COLUMN meta_pixel_id TEXT",
+  );
+}
+
 async function seedApprovedAccounts(db: DbExecutor) {
   const seedPath = path.join(process.cwd(), "data", "approved-users.json");
   const seed = parseJsonFile<ApprovedAccount[]>(seedPath, []);
@@ -486,6 +493,7 @@ async function initializeSqliteClient() {
   await client.exec(readFileSync(SQLITE_MIGRATION_PATH, "utf8"));
   await ensureVisitorSessionViewportColumns(client);
   await ensureSignupRequestCouponColumn(client);
+  await ensureLandingMetaPixelColumn(client);
   await seedDatabase(client);
   return client;
 }
@@ -494,6 +502,7 @@ async function initializePostgresClient() {
   const client = createPostgresClient(getPgPool());
   await client.exec(readFileSync(POSTGRES_MIGRATION_PATH, "utf8"));
   await ensureSignupRequestCouponColumn(client);
+  await ensureLandingMetaPixelColumn(client);
   await seedDatabase(client);
   return client;
 }
