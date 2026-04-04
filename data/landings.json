@@ -1,0 +1,72 @@
+[
+  {
+    "id": "274fa7c3-2f1f-4c5d-b8f6-4107269b8c0d",
+    "ownerEmail": "classdemo@example.com",
+    "type": "button",
+    "title": "Sample Button Landing",
+    "publicSlug": "sample-button-landing",
+    "status": "draft",
+    "description": "Initial sample landing for the first scaffold.",
+    "theme": {
+      "primaryColor": "#2563eb",
+      "textColor": "#0f172a",
+      "surfaceColor": "#ffffff",
+      "radius": 18
+    },
+    "images": [
+      {
+        "id": "4f9711db-6d39-48ca-ae0d-f97f2292b2f0",
+        "sortOrder": 1,
+        "src": "https://placehold.co/900x1800/png",
+        "alt": "Sample landing image"
+      }
+    ],
+    "buttons": [
+      {
+        "id": "57dbab1b-c3d2-497a-9a15-2eb3c4cbd74c",
+        "label": "Join Now",
+        "href": "https://example.com",
+        "widthRatio": 1,
+        "sortOrder": 1
+      }
+    ],
+    "formFields": [],
+    "htmlSource": null,
+    "metrics": {
+      "visitorCount": 12,
+      "totalClickCount": 32,
+      "ctaClickCount": 9,
+      "formSubmissionCount": 0,
+      "avgScrollDepth": 57,
+      "scrollCompletionRate": 18,
+      "validDwellSessionCount": 10,
+      "excludedDwellSessionCount": 2,
+      "dwellSections": [
+        88,
+        84,
+        80,
+        74,
+        70,
+        64,
+        58,
+        52,
+        48,
+        42,
+        38,
+        34,
+        30,
+        24,
+        20,
+        16,
+        12,
+        8,
+        5,
+        2
+      ],
+      "topSections": [1, 2, 3],
+      "weakSections": [18, 19, 20]
+    },
+    "createdAt": "2026-03-31T09:10:00.000Z",
+    "updatedAt": "2026-03-31T09:10:00.000Z"
+  }
+]

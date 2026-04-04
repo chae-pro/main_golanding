@@ -1,0 +1,12 @@
+[
+  {
+    "id": "5a49ce2b-ff14-4d53-8f42-e74dbaf27f2e",
+    "email": "classdemo@example.com",
+    "name": "Meta Ads Student",
+    "cohort": "meta-ads-2026-01",
+    "status": "approved",
+    "expiresAt": null,
+    "createdAt": "2026-03-31T09:00:00.000Z",
+    "updatedAt": "2026-03-31T09:00:00.000Z"
+  }
+]

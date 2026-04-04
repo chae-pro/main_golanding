@@ -1,0 +1,9 @@
+.next
+node_modules
+.env
+dist
+npm-debug.log*
+data/*.sqlite
+data/*.sqlite-*
+public/uploads/*
+!public/uploads/.gitkeep
