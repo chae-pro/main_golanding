@@ -29,6 +29,10 @@ function getStorageProvider(): StorageProvider {
   return "local";
 }
 
+function isProductionRuntime() {
+  return process.env.NODE_ENV === "production";
+}
+
 function sanitizeExtension(fileName: string, mimeType: string) {
   const byName = path.extname(fileName).toLowerCase();
 
@@ -152,6 +156,12 @@ export async function saveUploadedImage(file: File): Promise<UploadResult> {
 
   if (getStorageProvider() === "s3") {
     return uploadToS3(file, key);
+  }
+
+  if (isProductionRuntime()) {
+    throw new Error(
+      "현재 운영 환경에서는 로컬 업로드를 사용할 수 없습니다. Vercel에서는 S3 호환 스토리지를 연결해야 합니다.",
+    );
   }
 
   return uploadToLocal(file, key);
