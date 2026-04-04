@@ -14,18 +14,7 @@ function getHeatmapPointClass(targetType: "page" | "cta" | "form") {
   return "heatmap-point";
 }
 
-function getRankOpacity(rank: number, total: number, hasPositiveValue: boolean) {
-  if (!hasPositiveValue) {
-    return 0.06;
-  }
-
-  const clampedTotal = Math.max(total, 1);
-  const normalized = clampedTotal === 1 ? 1 : (clampedTotal - rank) / (clampedTotal - 1);
-
-  return 0.08 + normalized * 0.42;
-}
-
-function getRankMix(rank: number, total: number, hasPositiveValue: boolean) {
+function getRankStrength(rank: number, total: number, hasPositiveValue: boolean) {
   if (!hasPositiveValue) {
     return 0;
   }
@@ -44,7 +33,7 @@ function mixChannel(from: number, to: number, ratio: number) {
 }
 
 function getRankColor(rank: number, total: number, hasPositiveValue: boolean) {
-  const mix = getRankMix(rank, total, hasPositiveValue);
+  const mix = getRankStrength(rank, total, hasPositiveValue);
 
   return {
     red: mixChannel(255, 178, mix),
@@ -71,29 +60,29 @@ function getDwellRanks(values: number[]) {
 }
 
 function getDwellOverlayStyle(rank: number, total: number, hasPositiveValue: boolean, index: number) {
-  const opacity = getRankOpacity(rank, total, hasPositiveValue);
+  const strength = getRankStrength(rank, total, hasPositiveValue);
   const color = getRankColor(rank, total, hasPositiveValue);
+  const opacity = hasPositiveValue ? 0.08 + strength * 0.42 : 0.04;
 
   return {
     top: `${(index / 20) * 100}%`,
     height: `${100 / 20}%`,
-    background: `linear-gradient(90deg,
-      rgba(${color.red}, ${color.green}, ${color.blue}, ${opacity}),
-      rgba(${color.red}, ${color.green}, ${color.blue}, ${Math.max(opacity * 0.82, 0.14)}) 62%,
-      rgba(${color.red}, ${color.green}, ${color.blue}, ${Math.max(opacity * 0.62, 0.1)}) 100%)`,
-    boxShadow: `inset 0 0 0 1px rgba(255, 255, 255, ${Math.max(opacity * 0.22, 0.08)})`,
+    backgroundColor: `rgba(${color.red}, ${color.green}, ${color.blue}, ${opacity})`,
+    boxShadow: `inset 0 0 0 1px rgba(255, 255, 255, ${0.08 + strength * 0.14})`,
   };
 }
 
 function getDwellSummaryStyle(rank: number, total: number, hasPositiveValue: boolean) {
-  const opacity = getRankOpacity(rank, total, hasPositiveValue);
+  const strength = getRankStrength(rank, total, hasPositiveValue);
   const color = getRankColor(rank, total, hasPositiveValue);
+  const opacity = hasPositiveValue ? 0.18 + strength * 0.3 : 0.06;
 
   return {
-    background: `linear-gradient(135deg,
-      rgba(255, 255, 255, ${Math.max(opacity * 0.72, 0.16)}),
-      rgba(${color.red}, ${color.green}, ${color.blue}, ${Math.max(opacity * 0.92, 0.18)}))`,
-    borderColor: `rgba(255, 255, 255, ${Math.max(opacity * 0.58, 0.2)})`,
+    backgroundColor: `rgba(${color.red}, ${color.green}, ${color.blue}, ${opacity})`,
+    borderColor: `rgba(${Math.max(color.red - 20, 0)}, ${Math.max(color.green - 6, 0)}, ${Math.max(
+      color.blue - 4,
+      0,
+    )}, ${0.12 + strength * 0.2})`,
   };
 }
 
