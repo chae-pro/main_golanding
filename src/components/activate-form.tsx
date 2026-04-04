@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -70,7 +69,6 @@ export function ActivateForm() {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           type="email"
-          placeholder="name@example.com"
           required
         />
       </label>
@@ -78,12 +76,6 @@ export function ActivateForm() {
       <button className="primary-button" disabled={isSubmitting} type="submit">
         {isSubmitting ? "로그인 중..." : "로그인"}
       </button>
-
-      <div className="link-row">
-        <Link className="ghost-button" href="/signup">
-          회원가입하기
-        </Link>
-      </div>
 
       {state.status !== "idle" ? (
         <p className={state.status === "success" ? "status-success" : "status-error"}>
