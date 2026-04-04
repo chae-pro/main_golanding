@@ -41,10 +41,6 @@ export default async function HomePage() {
     (sum, item) => sum + item.metrics.formSubmissionCount,
     0,
   );
-  const totalValidDwell = landingMetrics.reduce(
-    (sum, item) => sum + item.metrics.validDwellSessionCount,
-    0,
-  );
 
   return (
     <main>
@@ -57,8 +53,8 @@ export default async function HomePage() {
             체류맵 분석까지 바로 사용할 수 있습니다.
           </p>
           <div className="link-row">
-            <Link className="primary-button" href={auth ? "/landings/new" : "/login"}>
-              {auth ? "첫 랜딩 만들기" : "로그인"}
+            <Link className="primary-button primary-button-wide" href={auth ? "/landings/new" : "/login"}>
+              {auth ? "랜딩 만들기" : "로그인"}
             </Link>
             {auth ? null : (
               <Link className="ghost-button" href="/signup">
@@ -93,10 +89,6 @@ export default async function HomePage() {
             <div className="metric-card">
               <strong>{totalForms}</strong>
               <p>폼 제출 수</p>
-            </div>
-            <div className="metric-card">
-              <strong>{totalValidDwell}</strong>
-              <p>유효 체류 세션</p>
             </div>
           </div>
         </div>

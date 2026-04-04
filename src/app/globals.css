@@ -161,6 +161,10 @@ textarea {
   cursor: pointer;
 }
 
+.primary-button-wide {
+  min-width: 150px;
+}
+
 .hero-metrics,
 .metrics-grid,
 .detail-grid,
