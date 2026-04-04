@@ -1,5 +1,5 @@
-import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
 
 import { LandingStatusControls } from "@/components/landing-status-controls";
 import { getLandingMetrics } from "@/server/analytics-service";
@@ -23,7 +23,7 @@ function getLandingStatusLabel(status: "draft" | "published" | "archived") {
   if (status === "published") {
     return "발행중";
   }
-  return "보관됨";
+  return "보관중";
 }
 
 type LandingDetailPageProps = {
@@ -56,11 +56,11 @@ export default async function LandingDetailPage({ params }: LandingDetailPagePro
         <h2>{landing.title}</h2>
         <p>{landing.description || "아직 설명이 없습니다."}</p>
         <div className="link-row detail-actions">
-          <Link className="text-link" href={`/landings/${landing.id}/edit`}>
+          <Link className="ghost-button" href={`/landings/${landing.id}/edit`}>
             수정
           </Link>
-          <Link className="text-link" href={`/landings/${landing.id}/submissions`}>
-            제출 내역
+          <Link className="ghost-button" href={`/landings/${landing.id}/submissions`}>
+            DB확인하기
           </Link>
           <LandingStatusControls landingId={landing.id} currentStatus={landing.status} />
           <a
@@ -71,7 +71,7 @@ export default async function LandingDetailPage({ params }: LandingDetailPagePro
             CSV 다운로드
           </a>
           {landing.status === "published" ? (
-            <Link className="text-link" href={`/l/${landing.publicSlug}`} target="_blank">
+            <Link className="ghost-button" href={`/l/${landing.publicSlug}`} target="_blank">
               공개 페이지 열기
             </Link>
           ) : null}
@@ -113,7 +113,11 @@ export default async function LandingDetailPage({ params }: LandingDetailPagePro
         <div className="section-heading detail-heading">
           <span className="eyebrow">공개 URL</span>
           <h2>/l/{landing.publicSlug}</h2>
-          <p>{landing.status === "published" ? "현재 외부에서 접속할 수 있습니다." : "발행 후에만 외부 공개가 가능합니다."}</p>
+          <p>
+            {landing.status === "published"
+              ? "현재 외부에서 접속할 수 있습니다."
+              : "발행 후에만 외부 공개가 가능합니다."}
+          </p>
         </div>
       </section>
 
