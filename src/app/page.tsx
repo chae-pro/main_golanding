@@ -61,7 +61,7 @@ export default async function HomePage() {
               {auth ? "첫 랜딩 만들기" : "로그인"}
             </Link>
             {adminAccess ? (
-              <Link className="ghost-button" href="/admin/accounts">
+              <Link className="ghost-button" href="/admin">
                 관리자 페이지
               </Link>
             ) : null}
