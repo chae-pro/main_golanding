@@ -358,12 +358,6 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
             borderRadius: `${landing.theme.radius}px`,
           }}
         >
-          <div className="section-heading">
-            <span className="eyebrow">정보 입력</span>
-            <h2>{landing.title}</h2>
-            <p>{landing.description || "아래 항목을 입력하고 제출해주세요."}</p>
-          </div>
-
           <form className="public-form-grid" key={submissionVersion} onSubmit={handleFormSubmit}>
             {orderedFormFields.map((field) => (
               <label data-golanding-target="form" data-golanding-target-id={field.id} key={field.id}>
