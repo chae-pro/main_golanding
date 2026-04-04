@@ -38,7 +38,7 @@ export function LandingStatusControls({
           onClick={() => changeStatus("published")}
           type="button"
         >
-          {isPending ? "Saving..." : "Publish"}
+          {isPending ? "저장 중..." : "발행하기"}
         </button>
       ) : (
         <button
@@ -47,7 +47,7 @@ export function LandingStatusControls({
           onClick={() => changeStatus("draft")}
           type="button"
         >
-          {isPending ? "Saving..." : "Move To Draft"}
+          {isPending ? "저장 중..." : "초안으로 변경"}
         </button>
       )}
 
@@ -58,7 +58,7 @@ export function LandingStatusControls({
           onClick={() => changeStatus("archived")}
           type="button"
         >
-          {isPending ? "Saving..." : "Archive"}
+          {isPending ? "저장 중..." : "보관하기"}
         </button>
       ) : null}
     </div>

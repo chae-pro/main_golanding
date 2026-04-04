@@ -54,13 +54,13 @@ type EditableLandingPayload = {
 };
 
 const FIELD_OPTIONS: Array<{ key: LandingFormFieldKey; label: string }> = [
-  { key: "name", label: "Name" },
-  { key: "email", label: "Email" },
-  { key: "phone", label: "Phone" },
-  { key: "address", label: "Address" },
-  { key: "memo1", label: "Memo 1" },
-  { key: "memo2", label: "Memo 2" },
-  { key: "memo3", label: "Memo 3" },
+  { key: "name", label: "이름" },
+  { key: "email", label: "이메일" },
+  { key: "phone", label: "전화번호" },
+  { key: "address", label: "주소" },
+  { key: "memo1", label: "메모 1" },
+  { key: "memo2", label: "메모 2" },
+  { key: "memo3", label: "메모 3" },
 ];
 
 function buildImage(sortOrder: number): EditableImage {
@@ -75,7 +75,7 @@ function buildImage(sortOrder: number): EditableImage {
 function buildButton(sortOrder: number): EditableButton {
   return {
     id: crypto.randomUUID(),
-    label: `CTA Button ${sortOrder}`,
+    label: `버튼 ${sortOrder}`,
     href: "https://example.com",
     widthRatio: 1,
     sortOrder,
@@ -86,7 +86,7 @@ function buildField(sortOrder: number, fieldKey: LandingFormFieldKey = "memo1"):
   return {
     id: crypto.randomUUID(),
     fieldKey,
-    label: FIELD_OPTIONS.find((option) => option.key === fieldKey)?.label ?? "Field",
+    label: FIELD_OPTIONS.find((option) => option.key === fieldKey)?.label ?? "입력 항목",
     placeholder: "",
     required: false,
     sortOrder,
@@ -133,7 +133,7 @@ function buildDefaultPayload(type: LandingType): EditableLandingPayload {
     htmlSource:
       type === "html"
         ? {
-            htmlSource: "<section><h1>Paste your HTML here</h1></section>",
+            htmlSource: "<section><h1>여기에 HTML 소스를 붙여넣으세요</h1></section>",
           }
         : null,
   };
@@ -264,7 +264,7 @@ export function CreateLandingForm({
       const uploadedSrc = result.src;
 
       if (!response.ok || !uploadedSrc) {
-        throw new Error(result.message ?? "Image upload failed.");
+        throw new Error(result.message ?? "이미지 업로드에 실패했습니다.");
       }
 
       setPayload((previous) => ({
@@ -273,11 +273,11 @@ export function CreateLandingForm({
           imageIndex === index ? { ...image, src: uploadedSrc } : image,
         ),
       }));
-      setState({ status: "success", message: `Image ${index + 1} uploaded.` });
+      setState({ status: "success", message: `이미지 ${index + 1} 업로드가 완료되었습니다.` });
     } catch (error) {
       setState({
         status: "error",
-        message: error instanceof Error ? error.message : "Image upload failed.",
+        message: error instanceof Error ? error.message : "이미지 업로드에 실패했습니다.",
       });
     } finally {
       setUploadingImageIndex(null);
@@ -385,12 +385,15 @@ export function CreateLandingForm({
       const result = (await response.json()) as { message?: string; landing?: { id: string } };
 
       if (!response.ok || !result.landing) {
-        throw new Error(result.message ?? `Landing ${isEdit ? "update" : "creation"} failed.`);
+        throw new Error(
+          result.message ??
+            (isEdit ? "랜딩 수정에 실패했습니다." : "랜딩 생성에 실패했습니다."),
+        );
       }
 
       setState({
         status: "success",
-        message: `Landing ${isEdit ? "updated" : "created"}: ${result.landing.id}`,
+        message: isEdit ? "랜딩이 수정되었습니다." : "랜딩이 생성되었습니다.",
       });
       router.push(`/landings/${result.landing.id}`);
       router.refresh();
@@ -400,7 +403,9 @@ export function CreateLandingForm({
         message:
           error instanceof Error
             ? error.message
-            : `Landing ${isEdit ? "update" : "creation"} failed.`,
+            : isEdit
+              ? "랜딩 수정에 실패했습니다."
+              : "랜딩 생성에 실패했습니다.",
       });
     } finally {
       setIsSubmitting(false);
@@ -410,26 +415,26 @@ export function CreateLandingForm({
   return (
     <form className="panel form-panel" onSubmit={onSubmit}>
       <div className="section-heading">
-        <span className="eyebrow">Landing</span>
-        <h2>{isEdit ? "Edit Landing" : "Create Draft Landing"}</h2>
-        <p>Now supports multiple images, multiple buttons, and dynamic DB fields.</p>
+        <span className="eyebrow">랜딩 편집기</span>
+        <h2>{isEdit ? "랜딩 수정" : "랜딩 초안 만들기"}</h2>
+        <p>여러 장의 이미지, 여러 개의 버튼, 동적 DB 입력 항목까지 구성할 수 있습니다.</p>
       </div>
 
       <label>
-        Landing type
+        랜딩 유형
         <select
           disabled={isEdit}
           value={type}
           onChange={(event) => updateType(event.target.value as LandingType)}
         >
-          <option value="button">Button</option>
-          <option value="form">DB Form</option>
-          <option value="html">HTML Source</option>
+          <option value="button">버튼형</option>
+          <option value="form">DB 수집형</option>
+          <option value="html">HTML 소스형</option>
         </select>
       </label>
 
       <label>
-        Title
+        제목
         <input
           value={payload.title}
           onChange={(event) => setPayload((prev) => ({ ...prev, title: event.target.value }))}
@@ -439,7 +444,7 @@ export function CreateLandingForm({
       </label>
 
       <label>
-        Public slug
+        공개 슬러그
         <input
           value={payload.publicSlug}
           onChange={(event) =>
@@ -452,7 +457,7 @@ export function CreateLandingForm({
       </label>
 
       <label>
-        Description
+        설명
         <textarea
           rows={3}
           value={payload.description}
@@ -464,7 +469,7 @@ export function CreateLandingForm({
 
       <div className="grid-two">
         <label>
-          Primary color
+          기본 색상
           <input
             value={payload.theme.primaryColor}
             onChange={(event) =>
@@ -478,7 +483,7 @@ export function CreateLandingForm({
         </label>
 
         <label>
-          Text color
+          텍스트 색상
           <input
             value={payload.theme.textColor}
             onChange={(event) =>
@@ -494,7 +499,7 @@ export function CreateLandingForm({
 
       <div className="grid-two">
         <label>
-          Surface color
+          배경 색상
           <input
             value={payload.theme.surfaceColor}
             onChange={(event) =>
@@ -508,7 +513,7 @@ export function CreateLandingForm({
         </label>
 
         <label>
-          Radius
+          모서리 둥글기
           <input
             value={payload.theme.radius}
             onChange={(event) =>
@@ -527,10 +532,10 @@ export function CreateLandingForm({
         <div className="editor-section-header">
           <div>
             <strong>Images</strong>
-            <p>Images are rendered in order as one continuous landing page.</p>
+            <p>이미지는 순서대로 이어져 하나의 긴 랜딩페이지처럼 노출됩니다.</p>
           </div>
           <button className="ghost-button" onClick={addImage} type="button">
-            Add Image
+            이미지 추가
           </button>
         </div>
 
@@ -538,7 +543,7 @@ export function CreateLandingForm({
           {payload.images.map((image, index) => (
             <div className="editor-card" key={image.id}>
               <div className="editor-card-header">
-                <strong>Image {index + 1}</strong>
+                <strong>이미지 {index + 1}</strong>
                 <div className="editor-actions">
                   <button
                     className="ghost-button"
@@ -546,7 +551,7 @@ export function CreateLandingForm({
                     onClick={() => moveImage(index, "up")}
                     type="button"
                   >
-                    Up
+                    위로
                   </button>
                   <button
                     className="ghost-button"
@@ -554,7 +559,7 @@ export function CreateLandingForm({
                     onClick={() => moveImage(index, "down")}
                     type="button"
                   >
-                    Down
+                    아래로
                   </button>
                   <button
                     className="ghost-button"
@@ -562,13 +567,13 @@ export function CreateLandingForm({
                     onClick={() => removeImage(index)}
                     type="button"
                   >
-                    Remove
+                    삭제
                   </button>
                 </div>
               </div>
 
               <label>
-                Image URL
+                이미지 URL
                 <input
                   placeholder="https://..."
                   type="url"
@@ -578,7 +583,7 @@ export function CreateLandingForm({
               </label>
 
               <label>
-                Upload image file
+                이미지 파일 업로드
                 <input
                   accept="image/png,image/jpeg,image/webp,image/gif"
                   disabled={uploadingImageIndex === index}
@@ -594,7 +599,7 @@ export function CreateLandingForm({
               </label>
 
               <label>
-                Alt text
+                대체 텍스트
                 <input
                   type="text"
                   value={image.alt}
@@ -609,7 +614,7 @@ export function CreateLandingForm({
               ) : null}
 
               {uploadingImageIndex === index ? (
-                <p className="status-success">Uploading image...</p>
+                <p className="status-success">이미지 업로드 중...</p>
               ) : null}
             </div>
           ))}
@@ -621,10 +626,10 @@ export function CreateLandingForm({
           <div className="editor-section-header">
             <div>
               <strong>Buttons</strong>
-              <p>Add multiple CTA buttons and control their width ratios.</p>
+              <p>여러 개의 CTA 버튼을 추가하고 버튼 폭 비율을 조절할 수 있습니다.</p>
             </div>
             <button className="ghost-button" onClick={addButton} type="button">
-              Add Button
+              버튼 추가
             </button>
           </div>
 
@@ -632,7 +637,7 @@ export function CreateLandingForm({
             {payload.buttons.map((button, index) => (
               <div className="editor-card" key={button.id}>
                 <div className="editor-card-header">
-                  <strong>Button {index + 1}</strong>
+                  <strong>버튼 {index + 1}</strong>
                   <div className="editor-actions">
                     <button
                       className="ghost-button"
@@ -640,7 +645,7 @@ export function CreateLandingForm({
                       onClick={() => moveButton(index, "up")}
                       type="button"
                     >
-                      Up
+                      위로
                     </button>
                     <button
                       className="ghost-button"
@@ -648,7 +653,7 @@ export function CreateLandingForm({
                       onClick={() => moveButton(index, "down")}
                       type="button"
                     >
-                      Down
+                      아래로
                     </button>
                     <button
                       className="ghost-button"
@@ -656,14 +661,14 @@ export function CreateLandingForm({
                       onClick={() => removeButton(index)}
                       type="button"
                     >
-                      Remove
+                      삭제
                     </button>
                   </div>
                 </div>
 
                 <div className="grid-two">
                   <label>
-                    Label
+                    버튼 문구
                     <input
                       type="text"
                       value={button.label}
@@ -672,7 +677,7 @@ export function CreateLandingForm({
                   </label>
 
                   <label>
-                    Link
+                    이동 링크
                     <input
                       type="url"
                       value={button.href}
@@ -682,7 +687,7 @@ export function CreateLandingForm({
                 </div>
 
                 <label>
-                  Width ratio
+                  버튼 폭 비율
                   <input
                     min={1}
                     step={0.1}
@@ -704,10 +709,10 @@ export function CreateLandingForm({
           <div className="editor-section-header">
             <div>
               <strong>Form Fields</strong>
-              <p>Add, remove, and configure required lead fields.</p>
+              <p>입력 항목을 추가, 삭제하고 필수 여부를 설정할 수 있습니다.</p>
             </div>
             <button className="ghost-button" onClick={addField} type="button">
-              Add Field
+              항목 추가
             </button>
           </div>
 
@@ -715,7 +720,7 @@ export function CreateLandingForm({
             {payload.formFields.map((field, index) => (
               <div className="editor-card" key={field.id}>
                 <div className="editor-card-header">
-                  <strong>Field {index + 1}</strong>
+                  <strong>입력 항목 {index + 1}</strong>
                   <div className="editor-actions">
                     <button
                       className="ghost-button"
@@ -723,7 +728,7 @@ export function CreateLandingForm({
                       onClick={() => moveField(index, "up")}
                       type="button"
                     >
-                      Up
+                      위로
                     </button>
                     <button
                       className="ghost-button"
@@ -731,7 +736,7 @@ export function CreateLandingForm({
                       onClick={() => moveField(index, "down")}
                       type="button"
                     >
-                      Down
+                      아래로
                     </button>
                     <button
                       className="ghost-button"
@@ -739,14 +744,14 @@ export function CreateLandingForm({
                       onClick={() => removeField(index)}
                       type="button"
                     >
-                      Remove
+                      삭제
                     </button>
                   </div>
                 </div>
 
                 <div className="grid-two">
                   <label>
-                    Field type
+                    항목 유형
                     <select
                       value={field.fieldKey}
                       onChange={(event) =>
@@ -762,22 +767,22 @@ export function CreateLandingForm({
                   </label>
 
                   <label>
-                    Required
+                    필수 여부
                     <select
                       value={field.required ? "required" : "optional"}
                       onChange={(event) =>
                         updateField(index, "required", event.target.value === "required")
                       }
                     >
-                      <option value="required">Required</option>
-                      <option value="optional">Optional</option>
+                      <option value="required">필수</option>
+                      <option value="optional">선택</option>
                     </select>
                   </label>
                 </div>
 
                 <div className="grid-two">
                   <label>
-                    Label
+                    질문/라벨
                     <input
                       type="text"
                       value={field.label}
@@ -786,7 +791,7 @@ export function CreateLandingForm({
                   </label>
 
                   <label>
-                    Placeholder
+                    안내 문구
                     <input
                       type="text"
                       value={field.placeholder}
@@ -802,7 +807,7 @@ export function CreateLandingForm({
 
       {type === "html" ? (
         <label>
-          HTML source
+          HTML 소스
           <textarea
             rows={12}
             value={payload.htmlSource?.htmlSource ?? ""}
@@ -817,7 +822,7 @@ export function CreateLandingForm({
       ) : null}
 
       <button className="primary-button" disabled={isSubmitting} type="submit">
-        {isSubmitting ? (isEdit ? "Saving..." : "Creating...") : isEdit ? "Save landing" : "Create landing"}
+        {isSubmitting ? (isEdit ? "저장 중..." : "생성 중...") : isEdit ? "랜딩 저장" : "랜딩 만들기"}
       </button>
 
       {state.status !== "idle" ? (

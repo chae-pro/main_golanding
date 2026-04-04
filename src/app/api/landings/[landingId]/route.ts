@@ -28,11 +28,11 @@ export async function GET(_request: Request, context: RouteContext) {
   const landing = await getLandingById(landingId);
 
   if (!landing) {
-    return NextResponse.json({ message: "Landing not found." }, { status: 404 });
+    return NextResponse.json({ message: "랜딩을 찾을 수 없습니다." }, { status: 404 });
   }
 
   if (landing.ownerEmail.toLowerCase() !== auth.session.email.toLowerCase()) {
-    return NextResponse.json({ message: "Forbidden." }, { status: 403 });
+    return NextResponse.json({ message: "접근 권한이 없습니다." }, { status: 403 });
   }
 
   return NextResponse.json({ landing });
@@ -47,7 +47,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     };
 
     if (!body.status) {
-      return NextResponse.json({ message: "status is required." }, { status: 400 });
+      return NextResponse.json({ message: "상태값이 필요합니다." }, { status: 400 });
     }
 
     const landing = await updateLandingStatus({
@@ -58,10 +58,20 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     return NextResponse.json({ landing });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Status update failed.";
+    const message = error instanceof Error ? error.message : "상태 변경에 실패했습니다.";
     const status =
       message === "LANDING_NOT_FOUND" ? 404 : message === "FORBIDDEN" ? 403 : 401;
-    return NextResponse.json({ message }, { status });
+    return NextResponse.json(
+      {
+        message:
+          message === "LANDING_NOT_FOUND"
+            ? "랜딩을 찾을 수 없습니다."
+            : message === "FORBIDDEN"
+              ? "접근 권한이 없습니다."
+              : message,
+      },
+      { status },
+    );
   }
 }
 
@@ -73,13 +83,13 @@ export async function PUT(request: Request, context: RouteContext) {
 
     if (!body.title || !body.publicSlug || !body.type) {
       return NextResponse.json(
-        { message: "title, publicSlug, and type are required." },
+        { message: "제목, 공개 슬러그, 랜딩 유형은 필수입니다." },
         { status: 400 },
       );
     }
 
     if (body.ownerEmail.toLowerCase() !== auth.session.email.toLowerCase()) {
-      return NextResponse.json({ message: "Owner email mismatch." }, { status: 403 });
+      return NextResponse.json({ message: "소유자 이메일이 일치하지 않습니다." }, { status: 403 });
     }
 
     const landing = await updateLanding({
@@ -93,7 +103,7 @@ export async function PUT(request: Request, context: RouteContext) {
 
     return NextResponse.json({ landing });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Landing update failed.";
+    const message = error instanceof Error ? error.message : "랜딩 수정에 실패했습니다.";
     const status =
       message === "LANDING_NOT_FOUND"
         ? 404
@@ -102,6 +112,18 @@ export async function PUT(request: Request, context: RouteContext) {
           : message === "PUBLIC_SLUG_ALREADY_EXISTS"
             ? 409
             : 401;
-    return NextResponse.json({ message }, { status });
+    return NextResponse.json(
+      {
+        message:
+          message === "LANDING_NOT_FOUND"
+            ? "랜딩을 찾을 수 없습니다."
+            : message === "FORBIDDEN"
+              ? "접근 권한이 없습니다."
+              : message === "PUBLIC_SLUG_ALREADY_EXISTS"
+                ? "이미 사용 중인 공개 슬러그입니다."
+                : message,
+      },
+      { status },
+    );
   }
 }

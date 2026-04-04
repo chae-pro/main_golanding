@@ -38,43 +38,43 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
   return (
     <main className="panel detail-panel">
       <div className="section-heading">
-        <span className="eyebrow">Analysis</span>
+        <span className="eyebrow">분석</span>
         <h2>{landing.title}</h2>
-        <p>Initial analytics scaffold for heatmap, scroll map, and normalized 20-section dwell map.</p>
+        <p>히트맵, 스크롤맵, 20등분 체류맵을 한 화면에서 확인할 수 있습니다.</p>
       </div>
 
       <div className="metrics-grid">
         <div className="detail-card">
           <strong>{metrics?.visitorCount ?? 0}</strong>
-          <p>Total visitors</p>
+          <p>총 방문자</p>
         </div>
         <div className="detail-card">
           <strong>{metrics?.totalClickCount ?? 0}</strong>
-          <p>Total clicks</p>
+          <p>총 클릭 수</p>
         </div>
         <div className="detail-card">
           <strong>{metrics?.ctaClickCount ?? 0}</strong>
-          <p>CTA clicks</p>
+          <p>CTA 클릭 수</p>
         </div>
         <div className="detail-card">
           <strong>{metrics?.formSubmissionCount ?? 0}</strong>
-          <p>Form submissions</p>
+          <p>폼 제출 수</p>
         </div>
         <div className="detail-card">
           <strong>{metrics?.avgScrollDepth ?? 0}%</strong>
-          <p>Average scroll depth</p>
+          <p>평균 스크롤 깊이</p>
         </div>
         <div className="detail-card">
           <strong>{metrics?.scrollCompletionRate ?? 0}%</strong>
-          <p>Scroll completion rate</p>
+          <p>스크롤 완주율</p>
         </div>
         <div className="detail-card">
           <strong>{metrics?.validDwellSessionCount ?? 0}</strong>
-          <p>Valid dwell sessions</p>
+          <p>유효 체류 세션</p>
         </div>
         <div className="detail-card">
           <strong>{metrics?.excludedDwellSessionCount ?? 0}</strong>
-          <p>Excluded dwell sessions</p>
+          <p>제외된 체류 세션</p>
         </div>
       </div>
 
@@ -82,9 +82,9 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
 
       <section className="list-panel">
         <div className="section-heading">
-          <span className="eyebrow">Dwell Map</span>
-          <h2>20-section normalized view</h2>
-          <p>Each section represents accumulated normalized dwell percent from valid sessions only.</p>
+          <span className="eyebrow">체류맵</span>
+          <h2>20구간 정규화 보기</h2>
+          <p>유효 세션만 기준으로 각 구간의 누적 체류 비율을 표시합니다.</p>
         </div>
 
         <div className="dwell-grid">
@@ -94,7 +94,7 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
               key={`${landing.id}-${index + 1}`}
               style={{ background: getDwellColor(value) }}
             >
-              <strong>Section {index + 1}</strong>
+              <strong>{index + 1}구간</strong>
               <span>{value}%</span>
             </div>
           ))}

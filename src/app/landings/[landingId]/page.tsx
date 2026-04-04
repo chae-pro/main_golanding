@@ -6,6 +6,26 @@ import { getLandingMetrics } from "@/server/analytics-service";
 import { getLandingById } from "@/server/landing-service";
 import { getCurrentCreatorSession } from "@/server/session-auth";
 
+function getLandingTypeLabel(type: "button" | "form" | "html") {
+  if (type === "button") {
+    return "버튼형";
+  }
+  if (type === "form") {
+    return "DB 수집형";
+  }
+  return "HTML 삽입형";
+}
+
+function getLandingStatusLabel(status: "draft" | "published" | "archived") {
+  if (status === "draft") {
+    return "초안";
+  }
+  if (status === "published") {
+    return "발행중";
+  }
+  return "보관됨";
+}
+
 type LandingDetailPageProps = {
   params: Promise<{ landingId: string }>;
 };
@@ -32,15 +52,15 @@ export default async function LandingDetailPage({ params }: LandingDetailPagePro
   return (
     <main className="panel detail-panel">
       <div className="section-heading">
-        <span className="eyebrow">Landing Detail</span>
+        <span className="eyebrow">랜딩 상세</span>
         <h2>{landing.title}</h2>
-        <p>{landing.description || "No description yet."}</p>
+        <p>{landing.description || "아직 설명이 없습니다."}</p>
         <div className="link-row">
           <Link className="text-link" href={`/landings/${landing.id}/edit`}>
-            Edit
+            수정
           </Link>
           <Link className="text-link" href={`/landings/${landing.id}/submissions`}>
-            Submissions
+            제출 내역
           </Link>
           <LandingStatusControls landingId={landing.id} currentStatus={landing.status} />
           <a
@@ -48,11 +68,11 @@ export default async function LandingDetailPage({ params }: LandingDetailPagePro
             href={`/api/landings/${landing.id}/submissions`}
             target="_blank"
           >
-            Download CSV
+            CSV 다운로드
           </a>
           {landing.status === "published" ? (
             <Link className="text-link" href={`/l/${landing.publicSlug}`} target="_blank">
-              Open Public Page
+              공개 페이지 열기
             </Link>
           ) : null}
         </div>
@@ -60,65 +80,65 @@ export default async function LandingDetailPage({ params }: LandingDetailPagePro
 
       <div className="detail-grid">
         <div className="detail-card">
-          <strong>{landing.type}</strong>
-          <p>Landing type</p>
+          <strong>{getLandingTypeLabel(landing.type)}</strong>
+          <p>랜딩 유형</p>
         </div>
         <div className="detail-card">
-          <strong>{landing.status}</strong>
-          <p>Status</p>
+          <strong>{getLandingStatusLabel(landing.status)}</strong>
+          <p>상태</p>
         </div>
         <div className="detail-card">
           <strong>{landing.ownerEmail}</strong>
-          <p>Owner email</p>
+          <p>소유자 이메일</p>
         </div>
         <div className="detail-card">
           <strong>{landing.publicSlug}</strong>
-          <p>Public slug</p>
+          <p>공개 슬러그</p>
         </div>
         <div className="detail-card">
           <strong>{metrics?.visitorCount ?? 0}</strong>
-          <p>Visitors</p>
+          <p>방문자</p>
         </div>
         <div className="detail-card">
           <strong>{landing.images.length}</strong>
-          <p>Image count</p>
+          <p>이미지 수</p>
         </div>
         <div className="detail-card">
           <strong>{landing.buttons.length}</strong>
-          <p>Button count</p>
+          <p>버튼 수</p>
         </div>
       </div>
 
       <section className="list-panel">
         <div className="section-heading">
-          <span className="eyebrow">Public URL</span>
+          <span className="eyebrow">공개 URL</span>
           <h2>/l/{landing.publicSlug}</h2>
-          <p>{landing.status === "published" ? "Publicly accessible now." : "Only available after publish."}</p>
+          <p>{landing.status === "published" ? "현재 외부에서 접속할 수 있습니다." : "발행 후에만 외부 공개가 가능합니다."}</p>
         </div>
       </section>
 
       <section className="list-panel">
         <div className="section-heading">
-          <span className="eyebrow">Theme</span>
-          <h2>Visual settings</h2>
+          <span className="eyebrow">테마</span>
+          <h2>시각 설정</h2>
         </div>
 
         <div className="detail-grid">
           <div className="detail-card">
             <strong>{landing.theme.primaryColor}</strong>
-            <p>Primary color</p>
+            <p>기본 색상</p>
           </div>
           <div className="detail-card">
             <strong>{landing.theme.textColor}</strong>
-            <p>Text color</p>
+            <p>텍스트 색상</p>
           </div>
           <div className="detail-card">
             <strong>{landing.theme.surfaceColor}</strong>
-            <p>Surface color</p>
+            <p>배경 색상</p>
           </div>
           <div className="detail-card">
             <strong>{landing.theme.radius}px</strong>
-            <p>Radius</p>
+            <p>모서리 둥글기</p>
           </div>
         </div>
       </section>

@@ -36,19 +36,19 @@ export function ActivateForm() {
       };
 
       if (!response.ok || !result.session) {
-        throw new Error(result.message ?? "Sign in failed.");
+        throw new Error(result.message ?? "로그인에 실패했습니다.");
       }
 
       setState({
         status: "success",
-        message: `Signed in until ${new Date(result.session.expiresAt).toLocaleString()}`,
+        message: `${new Date(result.session.expiresAt).toLocaleString()}까지 로그인 상태가 유지됩니다.`,
       });
       router.push("/landings/new");
       router.refresh();
     } catch (error) {
       setState({
         status: "error",
-        message: error instanceof Error ? error.message : "Sign in failed.",
+        message: error instanceof Error ? error.message : "로그인에 실패했습니다.",
       });
     } finally {
       setIsSubmitting(false);
@@ -58,18 +58,18 @@ export function ActivateForm() {
   return (
     <form className="panel form-panel" onSubmit={onSubmit}>
       <div className="section-heading">
-        <span className="eyebrow">Access</span>
-        <h2>Sign In To Golanding</h2>
-        <p>Approved email only. This SaaS build uses a server-side web session.</p>
+        <span className="eyebrow">접근 권한</span>
+        <h2>고랜딩 로그인</h2>
+        <p>승인된 이메일만 로그인할 수 있으며, 서버 세션 방식으로 관리됩니다.</p>
       </div>
 
       <label>
-        Approved email
+        승인된 이메일
         <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" required />
       </label>
 
       <button className="primary-button" disabled={isSubmitting} type="submit">
-        {isSubmitting ? "Signing in..." : "Sign in"}
+        {isSubmitting ? "로그인 중..." : "로그인"}
       </button>
 
       {state.status !== "idle" ? (

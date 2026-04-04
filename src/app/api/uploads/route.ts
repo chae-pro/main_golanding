@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     const file = formData.get("file");
 
     if (!(file instanceof File)) {
-      return NextResponse.json({ message: "Image file is required." }, { status: 400 });
+      return NextResponse.json({ message: "이미지 파일을 선택해주세요." }, { status: 400 });
     }
 
     const uploaded = await saveUploadedImage(file);
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       mimeType: file.type,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Upload failed.";
+    const message = error instanceof Error ? error.message : "업로드에 실패했습니다.";
     const status =
       message === "UNAUTHORIZED"
         ? 401

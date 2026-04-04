@@ -2,13 +2,21 @@ import { NextResponse } from "next/server";
 
 import { createApprovedSession, SESSION_COOKIE_NAME } from "@/server/access-service";
 
+function getLoginErrorMessage(reason: string) {
+  if (reason === "EMAIL_NOT_APPROVED") {
+    return "승인된 이메일이 아닙니다.";
+  }
+
+  return "로그인에 실패했습니다.";
+}
+
 export async function POST(request: Request) {
   const body = (await request.json()) as {
     email?: string;
   };
 
   if (!body.email) {
-    return NextResponse.json({ message: "Email is required." }, { status: 400 });
+    return NextResponse.json({ message: "이메일을 입력해주세요." }, { status: 400 });
   }
 
   const result = await createApprovedSession({
@@ -16,7 +24,7 @@ export async function POST(request: Request) {
   });
 
   if (!result.ok) {
-    return NextResponse.json({ message: result.reason }, { status: 403 });
+    return NextResponse.json({ message: getLoginErrorMessage(result.reason) }, { status: 403 });
   }
 
   const response = NextResponse.json({

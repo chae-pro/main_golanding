@@ -41,19 +41,19 @@ export default async function LandingSubmissionsPage({ params }: LandingSubmissi
   return (
     <main className="panel detail-panel">
       <div className="section-heading">
-        <span className="eyebrow">Submissions</span>
+        <span className="eyebrow">제출 내역</span>
         <h2>{landing.title}</h2>
-        <p>In-app submission view for DB collection landings.</p>
+        <p>DB 수집형 랜딩에서 들어온 제출 데이터를 여기서 확인할 수 있습니다.</p>
         <div className="link-row">
           <Link className="text-link" href={`/landings/${landing.id}`}>
-            Back To Detail
+            상세로 돌아가기
           </Link>
           <a
             className="ghost-button"
             href={`/api/landings/${landing.id}/submissions`}
             target="_blank"
           >
-            Download CSV
+            CSV 다운로드
           </a>
         </div>
       </div>
@@ -61,14 +61,14 @@ export default async function LandingSubmissionsPage({ params }: LandingSubmissi
       {submissions.length === 0 ? (
         <div className="detail-card">
           <strong>0</strong>
-          <p>No submissions yet.</p>
+          <p>아직 제출된 데이터가 없습니다.</p>
         </div>
       ) : (
         <div className="table-shell">
           <table className="data-table">
             <thead>
               <tr>
-                <th>Submitted At</th>
+                <th>제출 일시</th>
                 {labels.map((label) => (
                   <th key={label}>{label}</th>
                 ))}

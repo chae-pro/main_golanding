@@ -44,69 +44,69 @@ export async function getDeploymentReadiness(input: {
   pushCheck(
     checks,
     "access-secret",
-    "Access secret",
+    "접근 비밀키",
     hasNonPlaceholderValue(accessSecret, ["replace-with-random-secret", "replace-with-long-random-secret"])
       ? "pass"
       : "fail",
     hasNonPlaceholderValue(accessSecret, ["replace-with-random-secret", "replace-with-long-random-secret"])
-      ? "Access token signing secret is configured."
-      : "Set a long random GOLANDING_ACCESS_SECRET before production deployment.",
+      ? "접근 토큰 서명용 비밀키가 설정되어 있습니다."
+      : "운영 배포 전 GOLANDING_ACCESS_SECRET에 충분히 긴 랜덤 값을 설정하세요.",
   );
 
   pushCheck(
     checks,
     "admin-emails",
-    "Admin emails",
+    "관리자 이메일",
     adminEmails?.trim() ? "pass" : "fail",
     adminEmails?.trim()
-      ? `Configured admin emails: ${adminEmails}`
-      : "Set GOLANDING_ADMIN_EMAILS so at least one operator can access admin controls.",
+      ? `설정된 관리자 이메일: ${adminEmails}`
+      : "GOLANDING_ADMIN_EMAILS를 설정해 최소 1명의 운영자가 관리자 기능에 접근할 수 있어야 합니다.",
   );
 
   pushCheck(
     checks,
     "approved-accounts",
-    "Approved accounts",
+    "승인 계정",
     input.approvedAccountCount > 0 ? "pass" : "warn",
     input.approvedAccountCount > 0
-      ? `${input.approvedAccountCount} approved creator account(s) available.`
-      : "No approved creator accounts exist yet. Add at least one before launch.",
+      ? `사용 가능한 승인 제작자 계정이 ${input.approvedAccountCount}개 있습니다.`
+      : "아직 승인된 제작자 계정이 없습니다. 오픈 전에 최소 1개 이상 추가하세요.",
   );
 
   pushCheck(
     checks,
     "db-provider",
-    "Database provider",
+    "데이터베이스 방식",
     dbProvider === "postgres" ? "pass" : environment === "production" ? "fail" : "warn",
     dbProvider === "postgres"
-      ? "PostgreSQL is selected for runtime storage."
+      ? "운영 저장소로 PostgreSQL이 선택되어 있습니다."
       : environment === "production"
-        ? "Production should not run on SQLite. Switch GOLANDING_DB_PROVIDER to postgres."
-        : "SQLite is fine for local development, but production should use PostgreSQL.",
+        ? "운영 환경에서 SQLite는 적합하지 않습니다. GOLANDING_DB_PROVIDER를 postgres로 변경하세요."
+        : "로컬 개발에서는 SQLite를 써도 되지만, 운영 환경은 PostgreSQL을 권장합니다.",
   );
 
   pushCheck(
     checks,
     "database-url",
-    "Database URL",
+    "데이터베이스 연결 문자열",
     dbProvider === "postgres" ? (databaseUrl?.trim() ? "pass" : "fail") : "warn",
     dbProvider === "postgres"
       ? databaseUrl?.trim()
-        ? "DATABASE_URL is configured."
-        : "DATABASE_URL is required when GOLANDING_DB_PROVIDER=postgres."
-      : "DATABASE_URL is not required while SQLite is selected.",
+        ? "DATABASE_URL이 설정되어 있습니다."
+        : "GOLANDING_DB_PROVIDER=postgres 인 경우 DATABASE_URL이 반드시 필요합니다."
+      : "SQLite를 사용할 때는 DATABASE_URL이 필수가 아닙니다.",
   );
 
   pushCheck(
     checks,
     "storage-provider",
-    "Storage provider",
+    "스토리지 방식",
     storageProvider === "s3" ? "pass" : environment === "production" ? "warn" : "pass",
     storageProvider === "s3"
-      ? "S3-compatible object storage is selected."
+      ? "S3 호환 오브젝트 스토리지가 선택되어 있습니다."
       : environment === "production"
-        ? "Local uploads work, but production should prefer S3-compatible storage."
-        : "Local file storage is acceptable for development.",
+        ? "로컬 업로드도 동작은 하지만, 운영 환경에서는 S3 호환 스토리지를 권장합니다."
+        : "개발 환경에서는 로컬 파일 저장을 사용해도 됩니다.",
   );
 
   const s3Configured =
@@ -119,13 +119,13 @@ export async function getDeploymentReadiness(input: {
   pushCheck(
     checks,
     "storage-config",
-    "Storage configuration",
+    "스토리지 설정",
     storageProvider === "s3" ? (s3Configured ? "pass" : "fail") : "warn",
     storageProvider === "s3"
       ? s3Configured
-        ? "S3 bucket, region, public base URL, and credentials are configured."
-        : "When using S3 storage, configure S3_REGION, S3_BUCKET, S3_PUBLIC_BASE_URL, S3_ACCESS_KEY_ID, and S3_SECRET_ACCESS_KEY."
-      : "S3 variables are optional while local uploads are selected.",
+        ? "S3 버킷, 리전, 공개 URL, 인증 정보가 모두 설정되어 있습니다."
+        : "S3 스토리지를 사용할 경우 S3_REGION, S3_BUCKET, S3_PUBLIC_BASE_URL, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY를 설정해야 합니다."
+      : "로컬 업로드를 사용할 때는 S3 관련 환경변수가 선택 사항입니다.",
   );
 
   const overallStatus: DeploymentCheckStatus = checks.some((check) => check.status === "fail")

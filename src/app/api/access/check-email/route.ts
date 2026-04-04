@@ -7,7 +7,7 @@ export async function POST(request: Request) {
   const email = body.email?.trim().toLowerCase();
 
   if (!email) {
-    return NextResponse.json({ message: "Email is required." }, { status: 400 });
+    return NextResponse.json({ message: "이메일을 입력해주세요." }, { status: 400 });
   }
 
   const account = await findApprovedAccountByEmail(email);

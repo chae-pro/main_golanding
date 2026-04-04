@@ -193,16 +193,16 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
       const result = (await response.json()) as { message?: string };
 
       if (!response.ok) {
-        throw new Error(result.message ?? "Submission failed.");
+        throw new Error(result.message ?? "제출에 실패했습니다.");
       }
 
-      setSubmitState({ status: "success", message: "Submission completed." });
+      setSubmitState({ status: "success", message: "정상적으로 제출되었습니다." });
       setSubmissionVersion((value) => value + 1);
       form.reset();
     } catch (error) {
       setSubmitState({
         status: "error",
-        message: error instanceof Error ? error.message : "Submission failed.",
+        message: error instanceof Error ? error.message : "제출에 실패했습니다.",
       });
     } finally {
       setIsSubmitting(false);
@@ -233,9 +233,9 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
           }}
         >
           <div className="section-heading">
-            <span className="eyebrow">Call To Action</span>
+            <span className="eyebrow">버튼 영역</span>
             <h2>{landing.title}</h2>
-            <p>{landing.description || "Continue to the next step."}</p>
+            <p>{landing.description || "원하는 버튼을 눌러 다음 단계로 이동해보세요."}</p>
           </div>
 
           <div className="public-cta-grid">
@@ -271,9 +271,9 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
           }}
         >
           <div className="section-heading">
-            <span className="eyebrow">Lead Form</span>
+            <span className="eyebrow">정보 입력</span>
             <h2>{landing.title}</h2>
-            <p>{landing.description || "Submit your details below."}</p>
+            <p>{landing.description || "아래 항목을 입력하고 제출해주세요."}</p>
           </div>
 
           <form className="public-form-grid" key={submissionVersion} onSubmit={handleFormSubmit}>
@@ -303,7 +303,7 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
               }}
               type="submit"
             >
-              {isSubmitting ? "Submitting..." : "Submit"}
+              {isSubmitting ? "제출 중..." : "제출하기"}
             </button>
           </form>
 
@@ -332,7 +332,7 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
         >
           <div className="public-mobile-dock-meta">
             <strong>{landing.title}</strong>
-            <span>Tap a CTA without scrolling back up.</span>
+            <span>위로 다시 올라가지 않아도 바로 버튼을 누를 수 있어요.</span>
           </div>
           <div className="public-mobile-dock-actions">
             {orderedButtons.map((button) => (
@@ -365,7 +365,7 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
         >
           <div className="public-mobile-dock-meta">
             <strong>{landing.title}</strong>
-            <span>Jump straight to the lead form.</span>
+            <span>바로 입력 폼으로 이동할 수 있어요.</span>
           </div>
           <div className="public-mobile-dock-actions">
             <a
@@ -379,7 +379,7 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
                 borderRadius: `${landing.theme.radius}px`,
               }}
             >
-              Open Form
+              입력 폼 열기
             </a>
           </div>
         </div>

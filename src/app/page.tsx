@@ -5,6 +5,26 @@ import { isAdminEmail } from "@/server/admin-auth";
 import { listLandingsByOwner } from "@/server/landing-service";
 import { getCurrentCreatorSession } from "@/server/session-auth";
 
+function getLandingTypeLabel(type: "button" | "form" | "html") {
+  if (type === "button") {
+    return "버튼형";
+  }
+  if (type === "form") {
+    return "DB 수집형";
+  }
+  return "HTML 삽입형";
+}
+
+function getLandingStatusLabel(status: "draft" | "published" | "archived") {
+  if (status === "draft") {
+    return "초안";
+  }
+  if (status === "published") {
+    return "발행중";
+  }
+  return "보관됨";
+}
+
 export default async function HomePage() {
   const auth = await getCurrentCreatorSession();
   const adminAccess = auth ? isAdminEmail(auth.session.email) : false;
@@ -30,23 +50,23 @@ export default async function HomePage() {
     <main>
       <section className="hero">
         <div className="panel hero-copy">
-          <span className="eyebrow">Waterfall Build</span>
-          <h2>Scaffold the first working Golanding baseline.</h2>
+          <span className="eyebrow">고랜딩</span>
+          <h2>랜딩 제작과 성과 분석을 한 화면에서 시작하세요.</h2>
           <p>
-            This build already includes SaaS login, landing draft creation, landing listing, and a
-            first analytics view for click, scroll, and normalized 20-section dwell data.
+            로그인, 랜딩 초안 생성, 랜딩 목록 관리, 클릭 히트맵, 스크롤맵, 20등분 기준
+            체류맵 분석까지 바로 사용할 수 있습니다.
           </p>
           <div className="link-row">
             <Link className="primary-button" href={auth ? "/landings/new" : "/login"}>
-              {auth ? "Create first draft" : "Sign in"}
+              {auth ? "첫 랜딩 만들기" : "로그인"}
             </Link>
             {adminAccess ? (
               <Link className="ghost-button" href="/admin/accounts">
-                Manage Access
+                관리자 페이지
               </Link>
             ) : null}
             {auth ? null : (
-              <span className="session-chip">Approved email required for creator access</span>
+              <span className="session-chip">승인된 이메일만 제작자 기능을 사용할 수 있습니다</span>
             )}
           </div>
         </div>
@@ -55,23 +75,23 @@ export default async function HomePage() {
           <div className="hero-metrics">
             <div className="metric-card">
               <strong>{landings.length}</strong>
-              <p>Draft landings</p>
+              <p>내 랜딩 수</p>
             </div>
             <div className="metric-card">
               <strong>{totalVisitors}</strong>
-              <p>Total visitors</p>
+              <p>총 방문자</p>
             </div>
             <div className="metric-card">
               <strong>{totalClicks}</strong>
-              <p>Total clicks</p>
+              <p>총 클릭 수</p>
             </div>
             <div className="metric-card">
               <strong>{totalForms}</strong>
-              <p>Form submissions</p>
+              <p>폼 제출 수</p>
             </div>
             <div className="metric-card">
               <strong>{totalValidDwell}</strong>
-              <p>Valid dwell sessions</p>
+              <p>유효 체류 세션</p>
             </div>
           </div>
         </div>
@@ -79,12 +99,12 @@ export default async function HomePage() {
 
       <section className="panel list-panel">
         <div className="section-heading">
-          <span className="eyebrow">Landings</span>
-          <h2>{auth ? "Your landings" : "Sign in to view your landings"}</h2>
+          <span className="eyebrow">랜딩 목록</span>
+          <h2>{auth ? "내 랜딩" : "로그인 후 내 랜딩을 확인할 수 있습니다"}</h2>
           <p>
             {auth
-              ? "Creator dashboard is filtered to the signed-in owner."
-              : "Landing management and analytics are hidden until login."}
+              ? "현재 로그인한 계정 기준으로 내 랜딩만 표시됩니다."
+              : "로그인 전에는 랜딩 관리와 분석 기능이 숨겨집니다."}
           </p>
         </div>
 
@@ -96,36 +116,36 @@ export default async function HomePage() {
                   <div>
                     <h3>{landing.title}</h3>
                     <div className="meta-row">
-                      <span>{landing.type}</span>
-                      <span>{landing.status}</span>
+                      <span>{getLandingTypeLabel(landing.type)}</span>
+                      <span>{getLandingStatusLabel(landing.status)}</span>
                       <span>{landing.publicSlug}</span>
                     </div>
                   </div>
 
-                  <p>{landing.description || "No description yet."}</p>
+                  <p>{landing.description || "아직 설명이 없습니다."}</p>
 
                   <div className="metrics-grid">
                     <div className="detail-card">
                       <strong>{metrics.visitorCount}</strong>
-                      <p>Visitors</p>
+                      <p>방문자</p>
                     </div>
                     <div className="detail-card">
                       <strong>{metrics.totalClickCount}</strong>
-                      <p>Clicks</p>
+                      <p>클릭 수</p>
                     </div>
                   </div>
 
                   <div className="link-row">
                     {landing.status === "published" ? (
                       <Link className="text-link" href={`/l/${landing.publicSlug}`}>
-                        Public
+                        공개 페이지
                       </Link>
                     ) : null}
                     <Link className="text-link" href={`/landings/${landing.id}`}>
-                      Detail
+                      상세
                     </Link>
                     <Link className="text-link" href={`/analysis/${landing.id}`}>
-                      Analysis
+                      분석
                     </Link>
                   </div>
                 </article>
@@ -133,14 +153,14 @@ export default async function HomePage() {
             </div>
           ) : (
             <div className="detail-card">
-              <strong>No landings yet</strong>
-              <p>Create your first draft landing to start collecting click, scroll, and dwell data.</p>
+              <strong>아직 랜딩이 없습니다</strong>
+              <p>첫 랜딩을 만들어 방문, 클릭, 스크롤, 체류 데이터를 수집해보세요.</p>
             </div>
           )
         ) : (
           <div className="detail-card">
-            <strong>Creator Access Locked</strong>
-            <p>Use an approved email on the login page to create, edit, and analyze landings.</p>
+            <strong>제작자 접근이 잠겨 있습니다</strong>
+            <p>승인된 이메일로 로그인해야 랜딩 생성, 수정, 분석 기능을 사용할 수 있습니다.</p>
           </div>
         )}
       </section>

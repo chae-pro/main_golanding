@@ -8,8 +8,8 @@ import { getCurrentCreatorSession } from "@/server/session-auth";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Golanding",
-  description: "Landing heatmap, scroll map, and dwell map scaffold.",
+  title: "고랜딩",
+  description: "랜딩페이지 제작과 히트맵, 스크롤맵, 체류맵 분석을 위한 고랜딩",
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -22,15 +22,15 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <div className="app-shell">
           <header className="app-header">
             <div className="brand">
-              <h1>Golanding</h1>
-              <p>Landing builder and analytics scaffold for heatmap, scroll map, and dwell map.</p>
+              <h1>고랜딩</h1>
+              <p>랜딩 제작부터 히트맵, 스크롤맵, 체류맵 분석까지 한 곳에서 관리하세요.</p>
             </div>
 
             <nav className="header-nav">
-              <Link href="/">Home</Link>
-              <Link href="/login">Login</Link>
-              <Link href="/landings/new">New Landing</Link>
-              {isAdmin ? <Link href="/admin/accounts">Admin</Link> : null}
+              <Link href="/">홈</Link>
+              <Link href="/login">로그인</Link>
+              <Link href="/landings/new">랜딩 만들기</Link>
+              {isAdmin ? <Link href="/admin/accounts">관리자</Link> : null}
               {auth ? <SessionActions email={auth.session.email} /> : null}
             </nav>
           </header>

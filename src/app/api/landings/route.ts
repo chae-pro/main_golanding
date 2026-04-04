@@ -31,13 +31,13 @@ export async function POST(request: Request) {
 
     if (!body.title || !body.publicSlug || !body.type) {
       return NextResponse.json(
-        { message: "title, publicSlug, and type are required." },
+        { message: "제목, 공개 슬러그, 랜딩 유형은 필수입니다." },
         { status: 400 },
       );
     }
 
     if (body.ownerEmail.toLowerCase() !== auth.session.email.toLowerCase()) {
-      return NextResponse.json({ message: "Owner email mismatch." }, { status: 403 });
+      return NextResponse.json({ message: "소유자 이메일이 일치하지 않습니다." }, { status: 403 });
     }
 
     const landing = await createLanding({
@@ -51,8 +51,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ landing }, { status: 201 });
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Unknown error while creating landing.";
+      error instanceof Error ? error.message : "랜딩 생성 중 알 수 없는 오류가 발생했습니다.";
     const status = message === "PUBLIC_SLUG_ALREADY_EXISTS" ? 409 : 401;
-    return NextResponse.json({ message }, { status });
+    return NextResponse.json(
+      { message: message === "PUBLIC_SLUG_ALREADY_EXISTS" ? "이미 사용 중인 공개 슬러그입니다." : message },
+      { status },
+    );
   }
 }

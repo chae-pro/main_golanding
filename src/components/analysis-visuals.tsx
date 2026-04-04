@@ -25,9 +25,9 @@ export function AnalysisVisuals({
     <>
       <section className="list-panel">
         <div className="section-heading">
-          <span className="eyebrow">Click Heatmap</span>
-          <h2>Preview overlay</h2>
-          <p>Relative click coordinates from the public landing are projected on the landing preview.</p>
+          <span className="eyebrow">클릭 히트맵</span>
+          <h2>미리보기 오버레이</h2>
+          <p>공개 랜딩에서 수집된 클릭 좌표를 랜딩 이미지 위에 표시합니다.</p>
         </div>
 
         <div className="analysis-preview">
@@ -57,15 +57,15 @@ export function AnalysisVisuals({
 
       <section className="list-panel">
         <div className="section-heading">
-          <span className="eyebrow">Scroll Map</span>
-          <h2>20-section reach rate</h2>
-          <p>Each bar shows what percent of sessions reached that section threshold.</p>
+          <span className="eyebrow">스크롤맵</span>
+          <h2>20구간 도달률</h2>
+          <p>각 막대는 해당 구간까지 도달한 세션 비율을 의미합니다.</p>
         </div>
 
         <div className="scroll-map-list">
           {visuals.scrollSections.map((section) => (
             <div className="scroll-map-row" key={section.section}>
-              <strong>Section {section.section}</strong>
+              <strong>{section.section}구간</strong>
               <div className="scroll-map-track">
                 <div
                   className="scroll-map-fill"

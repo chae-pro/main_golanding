@@ -54,17 +54,17 @@ function sanitizeExtension(fileName: string, mimeType: string) {
 
 function assertValidImage(file: File) {
   if (!file.type.startsWith("image/")) {
-    throw new Error("Only image uploads are allowed.");
+    throw new Error("이미지 파일만 업로드할 수 있습니다.");
   }
 
   if (file.size > MAX_UPLOAD_BYTES) {
-    throw new Error("Image must be 10MB or smaller.");
+    throw new Error("이미지는 10MB 이하만 업로드할 수 있습니다.");
   }
 
   const extension = sanitizeExtension(file.name, file.type);
 
   if (!extension) {
-    throw new Error("Unsupported image type. Use png, jpg, webp, or gif.");
+    throw new Error("지원하지 않는 이미지 형식입니다. png, jpg, webp, gif만 가능합니다.");
   }
 
   return extension;
@@ -101,7 +101,7 @@ function getS3Client() {
     const region = process.env.S3_REGION;
 
     if (!accessKeyId || !secretAccessKey || !region) {
-      throw new Error("S3 credentials are required when GOLANDING_STORAGE_PROVIDER=s3");
+      throw new Error("S3 업로드를 사용하려면 S3 접속 정보가 필요합니다.");
     }
 
     globalStorage.__golandingS3Client = new S3Client({
@@ -123,7 +123,7 @@ async function uploadToS3(file: File, key: string): Promise<UploadResult> {
   const publicBaseUrl = process.env.S3_PUBLIC_BASE_URL;
 
   if (!bucket || !publicBaseUrl) {
-    throw new Error("S3_BUCKET and S3_PUBLIC_BASE_URL are required for S3 uploads");
+    throw new Error("S3 업로드를 사용하려면 S3_BUCKET과 S3_PUBLIC_BASE_URL이 필요합니다.");
   }
 
   const client = getS3Client();
