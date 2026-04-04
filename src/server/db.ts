@@ -50,6 +50,8 @@ type DbGlobal = typeof globalThis & {
   __golandingPgPool?: Pool;
 };
 
+const DEFAULT_VIEWPORT_BOTTOM_RATIO = 0.05;
+
 function getDbProvider(): DbProvider {
   const explicit = process.env.GOLANDING_DB_PROVIDER?.trim().toLowerCase();
 
@@ -203,6 +205,43 @@ function createPostgresClient(pool: Pool): DbClient {
   return executor;
 }
 
+async function execIgnoreAlreadyExists(db: DbClient, sql: string) {
+  try {
+    await db.exec(sql);
+  } catch (error) {
+    const message = error instanceof Error ? error.message.toLowerCase() : "";
+
+    if (
+      message.includes("duplicate column name") ||
+      message.includes("already exists") ||
+      message.includes("duplicate_column")
+    ) {
+      return;
+    }
+
+    throw error;
+  }
+}
+
+async function ensureVisitorSessionViewportColumns(db: DbClient) {
+  if (db.provider === "postgres") {
+    return;
+  }
+
+  await execIgnoreAlreadyExists(
+    db,
+    "ALTER TABLE visitor_sessions ADD COLUMN last_viewport_top_ratio REAL NOT NULL DEFAULT 0",
+  );
+  await execIgnoreAlreadyExists(
+    db,
+    `ALTER TABLE visitor_sessions ADD COLUMN last_viewport_bottom_ratio REAL NOT NULL DEFAULT ${DEFAULT_VIEWPORT_BOTTOM_RATIO}`,
+  );
+  await execIgnoreAlreadyExists(
+    db,
+    "ALTER TABLE visitor_sessions ADD COLUMN max_visible_section_index INTEGER NOT NULL DEFAULT 1",
+  );
+}
+
 async function seedApprovedAccounts(db: DbExecutor) {
   const seedPath = path.join(process.cwd(), "data", "approved-users.json");
   const seed = parseJsonFile<ApprovedAccount[]>(seedPath, []);
@@ -343,8 +382,9 @@ async function seedVisitorSessions(db: DbExecutor) {
       `
       INSERT INTO visitor_sessions (
         id, landing_id, started_at, last_activity_at, last_section_index,
+        last_viewport_top_ratio, last_viewport_bottom_ratio, max_visible_section_index,
         max_scroll_depth, excluded_from_dwell, valid_dwell_ms, section_dwell_json
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
       [
         session.id,
@@ -352,6 +392,9 @@ async function seedVisitorSessions(db: DbExecutor) {
         session.startedAt,
         session.lastActivityAt,
         session.lastSectionIndex,
+        session.lastViewportTopRatio ?? 0,
+        session.lastViewportBottomRatio ?? DEFAULT_VIEWPORT_BOTTOM_RATIO,
+        session.maxVisibleSectionIndex ?? Math.max(session.lastSectionIndex, 1),
         session.maxScrollDepth,
         session.excludedFromDwell ? 1 : 0,
         session.validDwellMs,
@@ -434,6 +477,7 @@ async function initializeSqliteClient() {
   const db = await getSqliteDatabase();
   const client = createSqliteExecutor(db);
   await client.exec(readFileSync(SQLITE_MIGRATION_PATH, "utf8"));
+  await ensureVisitorSessionViewportColumns(client);
   await seedDatabase(client);
   return client;
 }

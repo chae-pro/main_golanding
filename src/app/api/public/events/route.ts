@@ -10,6 +10,8 @@ export async function POST(request: Request) {
     eventType?: AnalyticsEventType;
     sectionIndex?: number;
     scrollDepth?: number;
+    viewportTopRatio?: number;
+    viewportBottomRatio?: number;
     xRatio?: number;
     yRatio?: number;
     targetType?: AnalyticsTargetType;
@@ -30,6 +32,8 @@ export async function POST(request: Request) {
       eventType: body.eventType,
       sectionIndex: body.sectionIndex,
       scrollDepth: body.scrollDepth,
+      viewportTopRatio: body.viewportTopRatio,
+      viewportBottomRatio: body.viewportBottomRatio,
       xRatio: body.xRatio,
       yRatio: body.yRatio,
       targetType: body.targetType,

@@ -86,6 +86,9 @@ CREATE TABLE IF NOT EXISTS visitor_sessions (
   started_at TEXT NOT NULL,
   last_activity_at TEXT NOT NULL,
   last_section_index INTEGER NOT NULL,
+  last_viewport_top_ratio DOUBLE PRECISION NOT NULL DEFAULT 0,
+  last_viewport_bottom_ratio DOUBLE PRECISION NOT NULL DEFAULT 0.05,
+  max_visible_section_index INTEGER NOT NULL DEFAULT 1,
   max_scroll_depth DOUBLE PRECISION NOT NULL,
   excluded_from_dwell INTEGER NOT NULL,
   valid_dwell_ms INTEGER NOT NULL,
@@ -124,3 +127,12 @@ CREATE INDEX IF NOT EXISTS idx_landings_owner_email ON landings(owner_email);
 CREATE INDEX IF NOT EXISTS idx_visitor_sessions_landing_id ON visitor_sessions(landing_id);
 CREATE INDEX IF NOT EXISTS idx_analytics_events_landing_id ON analytics_events(landing_id);
 CREATE INDEX IF NOT EXISTS idx_form_submissions_landing_id ON form_submissions(landing_id);
+
+ALTER TABLE visitor_sessions
+  ADD COLUMN IF NOT EXISTS last_viewport_top_ratio DOUBLE PRECISION NOT NULL DEFAULT 0;
+
+ALTER TABLE visitor_sessions
+  ADD COLUMN IF NOT EXISTS last_viewport_bottom_ratio DOUBLE PRECISION NOT NULL DEFAULT 0.05;
+
+ALTER TABLE visitor_sessions
+  ADD COLUMN IF NOT EXISTS max_visible_section_index INTEGER NOT NULL DEFAULT 1;

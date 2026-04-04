@@ -9,6 +9,8 @@ export async function POST(request: Request) {
     sessionId?: string;
     sectionIndex?: number;
     scrollDepth?: number;
+    viewportTopRatio?: number;
+    viewportBottomRatio?: number;
     values?: FormSubmissionValue[];
   };
 
@@ -32,6 +34,8 @@ export async function POST(request: Request) {
       eventType: "form_submit",
       sectionIndex: body.sectionIndex,
       scrollDepth: body.scrollDepth,
+      viewportTopRatio: body.viewportTopRatio,
+      viewportBottomRatio: body.viewportBottomRatio,
       targetType: "form",
       targetId: "form-submit",
     });

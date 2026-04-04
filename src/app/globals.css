@@ -476,6 +476,32 @@ textarea {
   display: block;
 }
 
+.analysis-section-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.analysis-section-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.32);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.05);
+}
+
+.analysis-section-label,
+.analysis-section-value {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.72);
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.25);
+}
+
 .heatmap-point {
   position: absolute;
   width: 18px;

@@ -175,6 +175,9 @@ export type VisitorSession = {
   startedAt: string;
   lastActivityAt: string;
   lastSectionIndex: number;
+  lastViewportTopRatio: number;
+  lastViewportBottomRatio: number;
+  maxVisibleSectionIndex: number;
   maxScrollDepth: number;
   excludedFromDwell: boolean;
   validDwellMs: number;
@@ -224,4 +227,5 @@ export type ScrollSectionMetric = {
 export type LandingAnalysisVisuals = {
   heatmapPoints: HeatmapPoint[];
   scrollSections: ScrollSectionMetric[];
+  dwellSections: number[];
 };

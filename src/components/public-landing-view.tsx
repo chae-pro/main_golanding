@@ -15,14 +15,15 @@ function getPageMetrics() {
   const scrollableHeight = Math.max(documentHeight - window.innerHeight, 1);
   const scrollTop = window.scrollY;
   const scrollDepth = (scrollTop / scrollableHeight) * 100;
-  const sectionIndex = Math.min(
-    Math.max(Math.floor(((scrollTop + window.innerHeight / 2) / documentHeight) * 20) + 1, 1),
-    20,
-  );
+  const viewportTopRatio = scrollTop / documentHeight;
+  const viewportBottomRatio = (scrollTop + window.innerHeight) / documentHeight;
+  const midpoint = (viewportTopRatio + viewportBottomRatio) / 2;
+  const sectionIndex = Math.min(Math.max(Math.floor(midpoint * 20) + 1, 1), 20);
 
   return {
-    documentHeight,
     scrollDepth: Math.max(0, Math.min(scrollDepth, 100)),
+    viewportTopRatio: Math.max(0, Math.min(viewportTopRatio, 1)),
+    viewportBottomRatio: Math.max(0.0001, Math.min(viewportBottomRatio, 1)),
     sectionIndex,
   };
 }
@@ -61,6 +62,8 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
           landingId: landing.id,
           sectionIndex: metrics.sectionIndex,
           scrollDepth: metrics.scrollDepth,
+          viewportTopRatio: metrics.viewportTopRatio,
+          viewportBottomRatio: metrics.viewportBottomRatio,
         }),
       });
 
@@ -90,6 +93,8 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
       eventType: "pageview" | "scroll" | "click" | "form_submit";
       sectionIndex: number;
       scrollDepth?: number;
+      viewportTopRatio: number;
+      viewportBottomRatio: number;
       xRatio?: number;
       yRatio?: number;
       targetType?: "page" | "cta" | "form";
@@ -136,15 +141,14 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
       const pageHeight = Math.max(document.documentElement.scrollHeight, window.innerHeight, 1);
       const xRatio = event.pageX / Math.max(window.innerWidth, 1);
       const yRatio = event.pageY / pageHeight;
-      const metrics = getPageMetrics();
 
       void sendEvent({
         eventType: "click",
-        sectionIndex: metrics.sectionIndex,
-        scrollDepth: metrics.scrollDepth,
+        ...getPageMetrics(),
         xRatio,
         yRatio,
-        targetType: (element?.dataset.golandingTarget as "page" | "cta" | "form" | undefined) ?? "page",
+        targetType:
+          (element?.dataset.golandingTarget as "page" | "cta" | "form" | undefined) ?? "page",
         targetId: element?.dataset.golandingTargetId ?? "page",
       });
     };
@@ -186,6 +190,8 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
           sessionId,
           sectionIndex: metrics.sectionIndex,
           scrollDepth: metrics.scrollDepth,
+          viewportTopRatio: metrics.viewportTopRatio,
+          viewportBottomRatio: metrics.viewportBottomRatio,
           values,
         }),
       });
@@ -235,7 +241,7 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
           <div className="section-heading">
             <span className="eyebrow">버튼 영역</span>
             <h2>{landing.title}</h2>
-            <p>{landing.description || "원하는 버튼을 눌러 다음 단계로 이동해보세요."}</p>
+            <p>{landing.description || "아래 버튼을 눌러 다음 단계로 이동해보세요."}</p>
           </div>
 
           <div className="public-cta-grid">
@@ -332,7 +338,7 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
         >
           <div className="public-mobile-dock-meta">
             <strong>{landing.title}</strong>
-            <span>위로 다시 올라가지 않아도 바로 버튼을 누를 수 있어요.</span>
+            <span>다시 올라가지 않아도 바로 버튼을 누를 수 있습니다.</span>
           </div>
           <div className="public-mobile-dock-actions">
             {orderedButtons.map((button) => (
@@ -365,7 +371,7 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
         >
           <div className="public-mobile-dock-meta">
             <strong>{landing.title}</strong>
-            <span>바로 입력 폼으로 이동할 수 있어요.</span>
+            <span>입력 영역으로 바로 이동할 수 있습니다.</span>
           </div>
           <div className="public-mobile-dock-actions">
             <a
@@ -379,7 +385,7 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
                 borderRadius: `${landing.theme.radius}px`,
               }}
             >
-              입력 폼 열기
+              입력하러 가기
             </a>
           </div>
         </div>

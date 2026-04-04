@@ -10,8 +10,11 @@ type AnalysisPageProps = {
 };
 
 function getDwellColor(value: number) {
-  const alpha = Math.min(Math.max(value / 100, 0.1), 1);
-  return `rgba(37, 99, 235, ${alpha})`;
+  const alpha = Math.min(Math.max(value / 100, 0.08), 0.72);
+  return `linear-gradient(135deg, rgba(239, 68, 68, ${alpha}), rgba(249, 115, 22, ${Math.max(
+    alpha * 0.8,
+    0.06,
+  )}))`;
 }
 
 export default async function AnalysisPage({ params }: AnalysisPageProps) {
@@ -40,7 +43,7 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
       <div className="section-heading">
         <span className="eyebrow">분석</span>
         <h2>{landing.title}</h2>
-        <p>히트맵, 스크롤맵, 20등분 체류맵을 한 화면에서 확인할 수 있습니다.</p>
+        <p>클릭 히트맵, 스크롤맵, 20구간 체류맵을 한 화면에서 확인할 수 있습니다.</p>
       </div>
 
       <div className="metrics-grid">
@@ -66,7 +69,7 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
         </div>
         <div className="detail-card">
           <strong>{metrics?.scrollCompletionRate ?? 0}%</strong>
-          <p>스크롤 완주율</p>
+          <p>20구간 도달 세션 비율</p>
         </div>
         <div className="detail-card">
           <strong>{metrics?.validDwellSessionCount ?? 0}</strong>
@@ -74,7 +77,7 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
         </div>
         <div className="detail-card">
           <strong>{metrics?.excludedDwellSessionCount ?? 0}</strong>
-          <p>제외된 체류 세션</p>
+          <p>제외된 세션</p>
         </div>
       </div>
 
@@ -82,9 +85,9 @@ export default async function AnalysisPage({ params }: AnalysisPageProps) {
 
       <section className="list-panel">
         <div className="section-heading">
-          <span className="eyebrow">체류맵</span>
+          <span className="eyebrow">정규화 체류맵</span>
           <h2>20구간 정규화 보기</h2>
-          <p>유효 세션만 기준으로 각 구간의 누적 체류 비율을 표시합니다.</p>
+          <p>각 세션을 100%로 정규화한 뒤 평균한 체류 비율입니다. 합계는 100% 근처가 됩니다.</p>
         </div>
 
         <div className="dwell-grid">

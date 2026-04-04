@@ -7,6 +7,8 @@ export async function POST(request: Request) {
     landingId?: string;
     sectionIndex?: number;
     scrollDepth?: number;
+    viewportTopRatio?: number;
+    viewportBottomRatio?: number;
   };
 
   if (!body.landingId) {
@@ -17,6 +19,8 @@ export async function POST(request: Request) {
     landingId: body.landingId,
     sectionIndex: body.sectionIndex,
     scrollDepth: body.scrollDepth,
+    viewportTopRatio: body.viewportTopRatio,
+    viewportBottomRatio: body.viewportBottomRatio,
   });
 
   return NextResponse.json({ session });
