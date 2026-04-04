@@ -489,17 +489,33 @@ textarea {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 0 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.38);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.analysis-section-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
   padding: 0 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.32);
-  border-bottom: 1px solid rgba(15, 23, 42, 0.05);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.2);
+  color: #ffffff;
+  backdrop-filter: blur(8px);
 }
 
 .analysis-section-label,
 .analysis-section-value {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: rgba(15, 23, 42, 0.72);
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.25);
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.analysis-section-value {
+  font-size: 1rem;
 }
 
 .heatmap-point {

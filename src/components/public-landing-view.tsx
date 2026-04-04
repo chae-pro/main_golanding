@@ -10,6 +10,8 @@ type SubmitState =
   | { status: "success"; message: string }
   | { status: "error"; message: string };
 
+const ACTIVITY_PING_INTERVAL_MS = 3_000;
+
 function getPageMetrics() {
   const documentHeight = Math.max(document.documentElement.scrollHeight, window.innerHeight, 1);
   const scrollableHeight = Math.max(documentHeight - window.innerHeight, 1);
@@ -32,8 +34,9 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [submitState, setSubmitState] = useState<SubmitState>({ status: "idle" });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const scrollTimeoutRef = useRef<number | null>(null);
   const [submissionVersion, setSubmissionVersion] = useState(0);
+  const scrollTimeoutRef = useRef<number | null>(null);
+  const lastActivityPingAtRef = useRef(0);
 
   const orderedImages = useMemo(
     () => [...landing.images].sort((a, b) => a.sortOrder - b.sortOrder),
@@ -89,22 +92,26 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
       return;
     }
 
-    async function sendEvent(input: {
-      eventType: "pageview" | "scroll" | "click" | "form_submit";
-      sectionIndex: number;
-      scrollDepth?: number;
-      viewportTopRatio: number;
-      viewportBottomRatio: number;
-      xRatio?: number;
-      yRatio?: number;
-      targetType?: "page" | "cta" | "form";
-      targetId?: string;
-    }) {
+    async function sendEvent(
+      input: {
+        eventType: "pageview" | "scroll" | "click" | "form_submit" | "activity";
+        sectionIndex: number;
+        scrollDepth?: number;
+        viewportTopRatio: number;
+        viewportBottomRatio: number;
+        xRatio?: number;
+        yRatio?: number;
+        targetType?: "page" | "cta" | "form";
+        targetId?: string;
+      },
+      options?: { keepalive?: boolean },
+    ) {
       await fetch("/api/public/events", {
         method: "POST",
         headers: {
           "content-type": "application/json",
         },
+        keepalive: options?.keepalive ?? false,
         body: JSON.stringify({
           landingId: landing.id,
           sessionId,
@@ -113,6 +120,31 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
       });
     }
 
+    function markActivityTimestamp() {
+      lastActivityPingAtRef.current = Date.now();
+    }
+
+    function sendActivityPing(reason: string, force = false) {
+      const now = Date.now();
+
+      if (!force && now - lastActivityPingAtRef.current < ACTIVITY_PING_INTERVAL_MS) {
+        return;
+      }
+
+      markActivityTimestamp();
+
+      void sendEvent(
+        {
+          eventType: "activity",
+          ...getPageMetrics(),
+          targetType: "page",
+          targetId: reason,
+        },
+        { keepalive: force },
+      );
+    }
+
+    markActivityTimestamp();
     void sendEvent({
       eventType: "pageview",
       ...getPageMetrics(),
@@ -126,6 +158,7 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
       }
 
       scrollTimeoutRef.current = window.setTimeout(() => {
+        markActivityTimestamp();
         void sendEvent({
           eventType: "scroll",
           ...getPageMetrics(),
@@ -142,6 +175,7 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
       const xRatio = event.pageX / Math.max(window.innerWidth, 1);
       const yRatio = event.pageY / pageHeight;
 
+      markActivityTimestamp();
       void sendEvent({
         eventType: "click",
         ...getPageMetrics(),
@@ -153,12 +187,45 @@ export function PublicLandingView({ landing }: { landing: Landing }) {
       });
     };
 
+    const handleMouseMove = () => {
+      sendActivityPing("mousemove");
+    };
+
+    const handleKeyDown = () => {
+      sendActivityPing("keydown");
+    };
+
+    const handleTouchStart = () => {
+      sendActivityPing("touchstart");
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        sendActivityPing("visibility-hidden", true);
+      }
+    };
+
+    const handlePageHide = () => {
+      sendActivityPing("pagehide", true);
+    };
+
     window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("click", handleClick);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("pagehide", handlePageHide);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("click", handleClick);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("pagehide", handlePageHide);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+
       if (scrollTimeoutRef.current !== null) {
         window.clearTimeout(scrollTimeoutRef.current);
       }

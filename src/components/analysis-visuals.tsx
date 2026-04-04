@@ -16,14 +16,14 @@ function getHeatmapPointClass(targetType: "page" | "cta" | "form") {
 
 function getDwellOverlayStyle(value: number, index: number) {
   const normalized = Math.min(Math.max(value / 100, 0), 1);
-  const opacity = normalized > 0 ? 0.12 + normalized * 0.5 : 0.04;
+  const opacity = normalized > 0 ? 0.2 + normalized * 0.62 : 0.08;
 
   return {
     top: `${(index / 20) * 100}%`,
     height: `${100 / 20}%`,
-    background: `linear-gradient(90deg, rgba(239, 68, 68, ${opacity}), rgba(249, 115, 22, ${Math.max(
-      opacity * 0.72,
-      0.04,
+    background: `linear-gradient(90deg, rgba(220, 38, 38, ${opacity}), rgba(249, 115, 22, ${Math.max(
+      opacity * 0.86,
+      0.1,
     )}))`,
   };
 }
@@ -41,7 +41,7 @@ export function AnalysisVisuals({
         <div className="section-heading">
           <span className="eyebrow">클릭 히트맵</span>
           <h2>랜딩 이미지 오버레이</h2>
-          <p>실제 클릭 좌표와 20구간 체류 강도를 랜딩 이미지 위에 바로 겹쳐서 표시합니다.</p>
+          <p>실제 클릭 좌표와 20구간 체류 강도를 랜딩 이미지 위에 직접 겹쳐서 표시합니다.</p>
         </div>
 
         <div className="analysis-preview">
@@ -62,8 +62,10 @@ export function AnalysisVisuals({
                   key={`${landing.id}-dwell-overlay-${index + 1}`}
                   style={getDwellOverlayStyle(value, index)}
                 >
-                  <span className="analysis-section-label">{index + 1}구간</span>
-                  <span className="analysis-section-value">{value}%</span>
+                  <span className="analysis-section-badge analysis-section-label">
+                    {index + 1}구간
+                  </span>
+                  <span className="analysis-section-badge analysis-section-value">{value}%</span>
                 </div>
               ))}
             </div>

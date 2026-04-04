@@ -165,7 +165,7 @@ export type LandingUpdateInput = LandingCreateInput & {
   landingId: string;
 };
 
-export type AnalyticsEventType = "pageview" | "scroll" | "click" | "form_submit";
+export type AnalyticsEventType = "pageview" | "scroll" | "click" | "form_submit" | "activity";
 
 export type AnalyticsTargetType = "page" | "cta" | "form";
 
