@@ -13,6 +13,7 @@ import { buildAdminDisplayName, getConfiguredAdminEmails } from "@/server/admin-
 import { getDb } from "@/server/db";
 
 const SESSION_VALIDITY_DAYS = 7;
+const SESSION_VALIDATE_WRITE_THROTTLE_MS = 5 * 60 * 1000;
 export const SESSION_COOKIE_NAME = "golanding_session";
 
 type ApprovedAccountRow = {
@@ -1204,22 +1205,33 @@ export async function validateSessionToken(token: string) {
     return { ok: false as const, reason: "TOKEN_VERSION_MISMATCH" };
   }
 
-  const validatedAt = nowIso();
-  await db.run(
-    `
-    UPDATE creator_sessions
-    SET last_validated_at = ?, updated_at = ?
-    WHERE id = ?
-  `,
-    [validatedAt, validatedAt, session.id],
-  );
+  const now = Date.now();
+  const lastValidatedAtMs = new Date(session.lastValidatedAt).getTime();
+  let validatedAt = session.lastValidatedAt;
+  let updatedAt = session.updatedAt;
+
+  if (
+    Number.isNaN(lastValidatedAtMs) ||
+    now - lastValidatedAtMs >= SESSION_VALIDATE_WRITE_THROTTLE_MS
+  ) {
+    validatedAt = nowIso();
+    updatedAt = validatedAt;
+    await db.run(
+      `
+      UPDATE creator_sessions
+      SET last_validated_at = ?, updated_at = ?
+      WHERE id = ?
+    `,
+      [validatedAt, updatedAt, session.id],
+    );
+  }
 
   return {
     ok: true as const,
     session: {
       ...session,
       lastValidatedAt: validatedAt,
-      updatedAt: validatedAt,
+      updatedAt,
     },
     payload,
   };

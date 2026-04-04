@@ -3,15 +3,8 @@ import { redirect } from "next/navigation";
 import { ApprovedAccountsManager } from "@/components/approved-accounts-manager";
 import { CouponCodesManager } from "@/components/coupon-codes-manager";
 import { SignupRequestsManager } from "@/components/signup-requests-manager";
-import {
-  listActiveSessions,
-  listApprovedAccounts,
-  listCouponCodes,
-  listSignupRequests,
-} from "@/server/access-service";
+import { listApprovedAccounts, listCouponCodes, listSignupRequests } from "@/server/access-service";
 import { requireAdminSession } from "@/server/admin-auth";
-import { getAdminOverviewMetrics } from "@/server/admin-dashboard-service";
-import { getDeploymentReadiness } from "@/server/deployment-readiness-service";
 
 export default async function AdminMembersPage() {
   let auth;
@@ -23,16 +16,11 @@ export default async function AdminMembersPage() {
     redirect(message === "UNAUTHORIZED" ? "/login" : "/");
   }
 
-  const [accounts, overview, sessions, signupRequests, coupons] = await Promise.all([
+  const [accounts, signupRequests, coupons] = await Promise.all([
     listApprovedAccounts(),
-    getAdminOverviewMetrics(),
-    listActiveSessions(),
     listSignupRequests(),
     listCouponCodes(),
   ]);
-  const readiness = await getDeploymentReadiness({
-    approvedAccountCount: accounts.length,
-  });
 
   return (
     <>
@@ -41,9 +29,22 @@ export default async function AdminMembersPage() {
       <ApprovedAccountsManager
         currentSessionId={auth.session.id}
         initialAccounts={accounts}
-        initialOverview={overview}
-        initialReadiness={readiness}
-        initialSessions={sessions}
+        initialOverview={{
+          approvedAccountCount: 0,
+          activeSessionCount: 0,
+          publishedLandingCount: 0,
+          totalLandingCount: 0,
+          recentVisitorCount: 0,
+          recentFormSubmissionCount: 0,
+        }}
+        initialReadiness={{
+          environment: "production",
+          dbProvider: "",
+          storageProvider: "",
+          overallStatus: "pass",
+          checks: [],
+        }}
+        initialSessions={[]}
         variant="accounts-only"
       />
     </>

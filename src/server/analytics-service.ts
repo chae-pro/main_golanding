@@ -68,6 +68,12 @@ export type LandingSessionDebugRow = {
   topSections: Array<{ section: number; percent: number; ms: number }>;
 };
 
+export type LandingDashboardMetricSummary = {
+  visitorCount: number;
+  totalClickCount: number;
+  formSubmissionCount: number;
+};
+
 function nowIso() {
   return new Date().toISOString();
 }
@@ -543,6 +549,89 @@ export async function getLandingMetrics(landingId: string): Promise<LandingMetri
     topSections,
     weakSections,
   };
+}
+
+export async function getLandingDashboardMetrics(landingIds: string[]) {
+  const uniqueLandingIds = Array.from(new Set(landingIds.filter(Boolean)));
+
+  if (uniqueLandingIds.length === 0) {
+    return new Map<string, LandingDashboardMetricSummary>();
+  }
+
+  const db = await getDb();
+  const placeholders = uniqueLandingIds.map(() => "?").join(", ");
+
+  const [sessionRows, clickRows, formRows] = await Promise.all([
+    db.many<{ landing_id: string; visitor_count: number | string }>(
+      `
+        SELECT landing_id, COUNT(*) AS visitor_count
+        FROM visitor_sessions
+        WHERE landing_id IN (${placeholders})
+        GROUP BY landing_id
+      `,
+      uniqueLandingIds,
+    ),
+    db.many<{ landing_id: string; click_count: number | string }>(
+      `
+        SELECT landing_id, COUNT(*) AS click_count
+        FROM analytics_events
+        WHERE event_type = 'click' AND landing_id IN (${placeholders})
+        GROUP BY landing_id
+      `,
+      uniqueLandingIds,
+    ),
+    db.many<{ landing_id: string; form_count: number | string }>(
+      `
+        SELECT landing_id, COUNT(*) AS form_count
+        FROM form_submissions
+        WHERE landing_id IN (${placeholders})
+        GROUP BY landing_id
+      `,
+      uniqueLandingIds,
+    ),
+  ]);
+
+  const metricsMap = new Map<string, LandingDashboardMetricSummary>();
+
+  for (const landingId of uniqueLandingIds) {
+    metricsMap.set(landingId, {
+      visitorCount: 0,
+      totalClickCount: 0,
+      formSubmissionCount: 0,
+    });
+  }
+
+  for (const row of sessionRows) {
+    const current = metricsMap.get(row.landing_id);
+
+    if (!current) {
+      continue;
+    }
+
+    current.visitorCount = Number(row.visitor_count ?? 0);
+  }
+
+  for (const row of clickRows) {
+    const current = metricsMap.get(row.landing_id);
+
+    if (!current) {
+      continue;
+    }
+
+    current.totalClickCount = Number(row.click_count ?? 0);
+  }
+
+  for (const row of formRows) {
+    const current = metricsMap.get(row.landing_id);
+
+    if (!current) {
+      continue;
+    }
+
+    current.formSubmissionCount = Number(row.form_count ?? 0);
+  }
+
+  return metricsMap;
 }
 
 export async function getLandingAnalysisVisuals(

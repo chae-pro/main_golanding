@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { DashboardLandingList } from "@/components/dashboard-landing-list";
-import { getLandingMetrics } from "@/server/analytics-service";
+import { getLandingDashboardMetrics } from "@/server/analytics-service";
 import { isAdminEmail } from "@/server/admin-auth";
 import { listLandingsByOwner } from "@/server/landing-service";
 import { getCurrentCreatorSession } from "@/server/session-auth";
@@ -30,16 +30,17 @@ export default async function HomePage() {
   const auth = await getCurrentCreatorSession();
   const adminAccess = auth ? isAdminEmail(auth.session.email) : false;
   const landings = auth ? await listLandingsByOwner(auth.session.email) : [];
-  const landingMetrics = await Promise.all(
-    landings.map(async (landing) => ({
-      landing,
-      metrics: await getLandingMetrics(landing.id),
-    })),
+  const landingMetrics = await getLandingDashboardMetrics(landings.map((landing) => landing.id));
+  const totalVisitors = landings.reduce(
+    (sum, landing) => sum + (landingMetrics.get(landing.id)?.visitorCount ?? 0),
+    0,
   );
-  const totalVisitors = landingMetrics.reduce((sum, item) => sum + item.metrics.visitorCount, 0);
-  const totalClicks = landingMetrics.reduce((sum, item) => sum + item.metrics.totalClickCount, 0);
-  const totalForms = landingMetrics.reduce(
-    (sum, item) => sum + item.metrics.formSubmissionCount,
+  const totalClicks = landings.reduce(
+    (sum, landing) => sum + (landingMetrics.get(landing.id)?.totalClickCount ?? 0),
+    0,
+  );
+  const totalForms = landings.reduce(
+    (sum, landing) => sum + (landingMetrics.get(landing.id)?.formSubmissionCount ?? 0),
     0,
   );
 
@@ -98,9 +99,16 @@ export default async function HomePage() {
         </div>
 
         {auth ? (
-          landingMetrics.length > 0 ? (
+          landings.length > 0 ? (
             <DashboardLandingList
-              items={landingMetrics.map(({ landing, metrics }) => ({
+              items={landings.map((landing) => {
+                const metrics = landingMetrics.get(landing.id) ?? {
+                  visitorCount: 0,
+                  totalClickCount: 0,
+                  formSubmissionCount: 0,
+                };
+
+                return {
                 id: landing.id,
                 title: landing.title,
                 createdAt: landing.createdAt,
@@ -111,7 +119,8 @@ export default async function HomePage() {
                 visitorCount: metrics.visitorCount,
                 clickCount: metrics.totalClickCount,
                 isPublished: landing.status === "published",
-              }))}
+                };
+              })}
             />
           ) : (
             <div className="detail-card">
