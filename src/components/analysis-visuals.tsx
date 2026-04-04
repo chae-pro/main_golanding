@@ -23,8 +23,8 @@ function getDwellOverlayStyle(value: number, index: number) {
     height: `${100 / 20}%`,
     background: `linear-gradient(90deg,
       rgba(220, 38, 38, ${opacity}),
-      rgba(249, 115, 22, ${Math.max(opacity * 0.92, 0.16)}) 62%,
-      rgba(251, 146, 60, ${Math.max(opacity * 0.82, 0.14)}) 100%)`,
+      rgba(220, 38, 38, ${Math.max(opacity * 0.76, 0.16)}) 62%,
+      rgba(220, 38, 38, ${Math.max(opacity * 0.56, 0.12)}) 100%)`,
     boxShadow: `inset 0 0 0 1px rgba(255, 255, 255, ${Math.max(opacity * 0.18, 0.06)})`,
   };
 }
@@ -36,7 +36,7 @@ function getDwellSummaryStyle(value: number) {
   return {
     background: `linear-gradient(135deg,
       rgba(248, 113, 113, ${Math.max(opacity * 1.1, 0.16)}),
-      rgba(253, 186, 116, ${Math.max(opacity * 0.9, 0.12)}))`,
+      rgba(220, 38, 38, ${Math.max(opacity * 0.72, 0.12)}))`,
     borderColor: `rgba(255, 255, 255, ${Math.max(opacity * 0.5, 0.16)})`,
   };
 }
@@ -57,7 +57,7 @@ export function AnalysisVisuals({
       <section className="list-panel">
         <div className="section-heading">
           <span className="eyebrow">체류 오버레이 + 클릭 히트맵</span>
-          <h2>랜딩 이미지 오버레이</h2>
+          <h2>랜딩 체류 보기</h2>
           <p>실제 랜딩 이미지 기준 20구간을 나누고, 구간별 체류 퍼센트를 바로 표시합니다.</p>
         </div>
 
@@ -84,7 +84,6 @@ export function AnalysisVisuals({
                       <span className="analysis-section-badge analysis-section-label">
                         {index + 1}구간
                       </span>
-                      <span className="analysis-section-badge analysis-section-value">{value}%</span>
                     </div>
                   ))}
                 </div>
