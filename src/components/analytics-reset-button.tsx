@@ -10,7 +10,7 @@ export function AnalyticsResetButton({ landingId }: { landingId: string }) {
 
   async function handleReset() {
     const confirmed = window.confirm(
-      "이 랜딩의 방문, 클릭, 체류, 폼 제출 데이터를 모두 삭제합니다. 계속하시겠습니까?",
+      "정말 데이터를 리셋하시겠습니까?\n리셋이 되면 이전 체류데이터가 모두 삭제됩니다.",
     );
 
     if (!confirmed) {
@@ -30,7 +30,7 @@ export function AnalyticsResetButton({ landingId }: { landingId: string }) {
         throw new Error(result.message ?? "분석 데이터 초기화에 실패했습니다.");
       }
 
-      setMessage("분석 데이터를 초기화했습니다.");
+      setMessage("이전 분석 데이터를 모두 삭제했습니다.");
       router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "분석 데이터 초기화에 실패했습니다.");
@@ -42,8 +42,9 @@ export function AnalyticsResetButton({ landingId }: { landingId: string }) {
   return (
     <div className="analytics-reset-box">
       <button className="ghost-button" disabled={isResetting} onClick={handleReset} type="button">
-        {isResetting ? "초기화 중..." : "분석 데이터 초기화"}
+        {isResetting ? "데이터 리셋 중..." : "기존 데이터 리셋"}
       </button>
+      <p className="meta-inline">새 테스트 전에 이전 방문·체류·클릭 데이터를 비울 때 사용합니다.</p>
       {message ? <p className="meta-inline">{message}</p> : null}
     </div>
   );
