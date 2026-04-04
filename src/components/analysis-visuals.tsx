@@ -14,9 +14,36 @@ function getHeatmapPointClass(targetType: "page" | "cta" | "form") {
   return "heatmap-point";
 }
 
-function getDwellOverlayStyle(value: number, index: number) {
-  const normalized = Math.min(Math.max(value / 100, 0), 1);
-  const opacity = normalized > 0 ? 0.38 + normalized * 0.78 : 0.14;
+function getRankOpacity(rank: number, total: number, hasPositiveValue: boolean) {
+  if (!hasPositiveValue) {
+    return 0.06;
+  }
+
+  const clampedTotal = Math.max(total, 1);
+  const normalized = clampedTotal === 1 ? 1 : (clampedTotal - rank) / (clampedTotal - 1);
+
+  return 0.08 + normalized * 0.42;
+}
+
+function getDwellRanks(values: number[]) {
+  const sorted = [...values].sort((left, right) => right - left);
+
+  return values.map((value) => {
+    let lastIndex = sorted.length - 1;
+
+    for (let index = sorted.length - 1; index >= 0; index -= 1) {
+      if (sorted[index] === value) {
+        lastIndex = index;
+        break;
+      }
+    }
+
+    return lastIndex + 1;
+  });
+}
+
+function getDwellOverlayStyle(rank: number, total: number, hasPositiveValue: boolean, index: number) {
+  const opacity = getRankOpacity(rank, total, hasPositiveValue);
 
   return {
     top: `${(index / 20) * 100}%`,
@@ -29,9 +56,8 @@ function getDwellOverlayStyle(value: number, index: number) {
   };
 }
 
-function getDwellSummaryStyle(value: number) {
-  const normalized = Math.min(Math.max(value / 100, 0), 1);
-  const opacity = normalized > 0 ? 0.3 + normalized * 0.68 : 0.12;
+function getDwellSummaryStyle(rank: number, total: number, hasPositiveValue: boolean) {
+  const opacity = getRankOpacity(rank, total, hasPositiveValue);
 
   return {
     background: `linear-gradient(135deg,
@@ -52,6 +78,9 @@ export function AnalysisVisuals({
   landing: Landing;
   visuals: LandingAnalysisVisuals;
 }) {
+  const dwellRanks = getDwellRanks(visuals.dwellSections);
+  const highestDwellValue = Math.max(...visuals.dwellSections, 0);
+
   return (
     <>
       <section className="list-panel">
@@ -79,7 +108,12 @@ export function AnalysisVisuals({
                     <div
                       className="analysis-section-band"
                       key={`${landing.id}-dwell-overlay-${index + 1}`}
-                      style={getDwellOverlayStyle(value, index)}
+                      style={getDwellOverlayStyle(
+                        dwellRanks[index],
+                        visuals.dwellSections.length,
+                        value > 0 && highestDwellValue > 0,
+                        index,
+                      )}
                     >
                       <span className="analysis-section-badge analysis-section-label">
                         {index + 1}구간
@@ -106,7 +140,11 @@ export function AnalysisVisuals({
                 <div
                   className="analysis-section-summary-cell"
                   key={`${landing.id}-dwell-summary-${index + 1}`}
-                  style={getDwellSummaryStyle(value)}
+                  style={getDwellSummaryStyle(
+                    dwellRanks[index],
+                    visuals.dwellSections.length,
+                    value > 0 && highestDwellValue > 0,
+                  )}
                 >
                   <span className="analysis-section-summary-label">{index + 1}구간</span>
                   <strong className="analysis-section-summary-value">{value}%</strong>
