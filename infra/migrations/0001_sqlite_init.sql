@@ -29,10 +29,33 @@ CREATE TABLE IF NOT EXISTS signup_requests (
   email TEXT NOT NULL,
   name TEXT NOT NULL,
   cohort TEXT,
+  coupon TEXT,
   note TEXT,
   status TEXT NOT NULL,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS coupon_codes (
+  id TEXT PRIMARY KEY,
+  code TEXT NOT NULL UNIQUE,
+  valid_days INTEGER NOT NULL,
+  max_uses INTEGER NOT NULL,
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS coupon_redemptions (
+  id TEXT PRIMARY KEY,
+  coupon_id TEXT NOT NULL,
+  email TEXT NOT NULL,
+  approved_account_id TEXT NOT NULL,
+  signup_request_id TEXT,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (coupon_id) REFERENCES coupon_codes(id),
+  FOREIGN KEY (approved_account_id) REFERENCES approved_accounts(id),
+  FOREIGN KEY (signup_request_id) REFERENCES signup_requests(id)
 );
 
 CREATE TABLE IF NOT EXISTS landings (
@@ -125,6 +148,8 @@ CREATE TABLE IF NOT EXISTS form_submissions (
 
 CREATE INDEX IF NOT EXISTS idx_creator_sessions_email ON creator_sessions(email);
 CREATE INDEX IF NOT EXISTS idx_signup_requests_email ON signup_requests(email);
+CREATE INDEX IF NOT EXISTS idx_coupon_codes_code ON coupon_codes(code);
+CREATE INDEX IF NOT EXISTS idx_coupon_redemptions_coupon_id ON coupon_redemptions(coupon_id);
 CREATE INDEX IF NOT EXISTS idx_landings_owner_email ON landings(owner_email);
 CREATE INDEX IF NOT EXISTS idx_visitor_sessions_landing_id ON visitor_sessions(landing_id);
 CREATE INDEX IF NOT EXISTS idx_analytics_events_landing_id ON analytics_events(landing_id);

@@ -4,6 +4,7 @@ import type {
   AccessTokenPayload,
   AdminCreatorSession,
   ApprovedAccount,
+  CouponCode,
   CreatorSession,
   SignupRequest,
 } from "@/domain/types";
@@ -46,10 +47,22 @@ type SignupRequestRow = {
   email: string;
   name: string;
   cohort: string | null;
+  coupon: string | null;
   note: string | null;
   status: SignupRequest["status"];
   created_at: string;
   updated_at: string;
+};
+
+type CouponCodeRow = {
+  id: string;
+  code: string;
+  valid_days: number;
+  max_uses: number;
+  status: CouponCode["status"];
+  created_at: string;
+  updated_at: string;
+  redeemed_count?: number | string;
 };
 
 function nowIso() {
@@ -143,11 +156,40 @@ function mapSignupRequest(row: SignupRequestRow): SignupRequest {
     email: row.email,
     name: row.name,
     cohort: row.cohort ?? undefined,
+    coupon: row.coupon ?? undefined,
     note: row.note ?? undefined,
     status: row.status,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+}
+
+function mapCouponCode(row: CouponCodeRow): CouponCode {
+  const redeemedCount = Number(row.redeemed_count ?? 0);
+  const maxUses = Number(row.max_uses);
+
+  return {
+    id: row.id,
+    code: row.code,
+    validDays: Number(row.valid_days),
+    maxUses,
+    status: row.status,
+    redeemedCount,
+    remainingUses: Math.max(0, maxUses - redeemedCount),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function normalizeCouponCode(code?: string | null) {
+  const trimmed = code?.trim().toUpperCase();
+  return trimmed ? trimmed : null;
+}
+
+function computeCouponExpiry(validDays: number) {
+  const value = new Date();
+  value.setDate(value.getDate() + validDays);
+  return value.toISOString();
 }
 
 async function ensureConfiguredAdminAccounts() {
@@ -219,11 +261,103 @@ export async function listApprovedAccounts() {
   return rows.map(mapApprovedAccount);
 }
 
+export async function listCouponCodes() {
+  const db = await getDb();
+  const rows = await db.many<CouponCodeRow>(
+    `
+      SELECT
+        c.id,
+        c.code,
+        c.valid_days,
+        c.max_uses,
+        c.status,
+        c.created_at,
+        c.updated_at,
+        COUNT(r.id) AS redeemed_count
+      FROM coupon_codes c
+      LEFT JOIN coupon_redemptions r ON r.coupon_id = c.id
+      GROUP BY c.id, c.code, c.valid_days, c.max_uses, c.status, c.created_at, c.updated_at
+      ORDER BY c.created_at DESC
+    `,
+  );
+
+  return rows.map(mapCouponCode);
+}
+
+export async function createCouponCode(input: {
+  code: string;
+  validDays: number;
+  maxUses: number;
+}) {
+  const db = await getDb();
+  const code = normalizeCouponCode(input.code);
+  const validDays = Number(input.validDays);
+  const maxUses = Number(input.maxUses);
+
+  if (!code) {
+    throw new Error("COUPON_CODE_REQUIRED");
+  }
+
+  if (!Number.isInteger(validDays) || validDays <= 0) {
+    throw new Error("COUPON_VALID_DAYS_INVALID");
+  }
+
+  if (!Number.isInteger(maxUses) || maxUses <= 0) {
+    throw new Error("COUPON_MAX_USES_INVALID");
+  }
+
+  const existing = await db.one<CouponCodeRow>(
+    `
+      SELECT id, code, valid_days, max_uses, status, created_at, updated_at
+      FROM coupon_codes
+      WHERE code = ?
+      LIMIT 1
+    `,
+    [code],
+  );
+
+  if (existing) {
+    throw new Error("COUPON_CODE_ALREADY_EXISTS");
+  }
+
+  const now = nowIso();
+  const coupon: CouponCode = {
+    id: randomUUID(),
+    code,
+    validDays,
+    maxUses,
+    status: "active",
+    redeemedCount: 0,
+    remainingUses: maxUses,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await db.run(
+    `
+      INSERT INTO coupon_codes (
+        id, code, valid_days, max_uses, status, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `,
+    [
+      coupon.id,
+      coupon.code,
+      coupon.validDays,
+      coupon.maxUses,
+      coupon.status,
+      coupon.createdAt,
+      coupon.updatedAt,
+    ],
+  );
+
+  return coupon;
+}
+
 export async function listSignupRequests() {
   const db = await getDb();
   const rows = await db.many<SignupRequestRow>(
     `
-      SELECT id, email, name, cohort, note, status, created_at, updated_at
+      SELECT id, email, name, cohort, coupon, note, status, created_at, updated_at
       FROM signup_requests
       ORDER BY
         CASE status
@@ -242,11 +376,13 @@ export async function createSignupRequest(input: {
   email: string;
   name: string;
   cohort?: string | null;
+  coupon?: string | null;
   note?: string | null;
 }) {
   await ensureConfiguredAdminAccounts();
   const email = normalizeEmail(input.email);
   const name = input.name.trim();
+  const couponCode = normalizeCouponCode(input.coupon);
 
   if (!email) {
     throw new Error("EMAIL_REQUIRED");
@@ -273,7 +409,7 @@ export async function createSignupRequest(input: {
 
   const pending = await db.one<SignupRequestRow>(
     `
-      SELECT id, email, name, cohort, note, status, created_at, updated_at
+      SELECT id, email, name, cohort, coupon, note, status, created_at, updated_at
       FROM signup_requests
       WHERE lower(email) = ? AND status = 'pending'
       LIMIT 1
@@ -281,40 +417,168 @@ export async function createSignupRequest(input: {
     [email],
   );
 
-  if (pending) {
-    throw new Error("SIGNUP_REQUEST_ALREADY_PENDING");
+  if (!couponCode) {
+    if (pending) {
+      throw new Error("SIGNUP_REQUEST_ALREADY_PENDING");
+    }
+
+    const request: SignupRequest = {
+      id: randomUUID(),
+      email,
+      name,
+      cohort: normalizeOptionalText(input.cohort) ?? undefined,
+      coupon: undefined,
+      note: normalizeOptionalText(input.note) ?? undefined,
+      status: "pending",
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+    };
+
+    await db.run(
+      `
+        INSERT INTO signup_requests (
+          id, email, name, cohort, coupon, note, status, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        request.id,
+        request.email,
+        request.name,
+        request.cohort ?? null,
+        null,
+        request.note ?? null,
+        request.status,
+        request.createdAt,
+        request.updatedAt,
+      ],
+    );
+
+    return request;
   }
 
-  const request: SignupRequest = {
-    id: randomUUID(),
-    email,
-    name,
-    cohort: normalizeOptionalText(input.cohort) ?? undefined,
-    note: normalizeOptionalText(input.note) ?? undefined,
-    status: "pending",
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
-  };
+  const now = nowIso();
 
-  await db.run(
-    `
-      INSERT INTO signup_requests (
-        id, email, name, cohort, note, status, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `,
-    [
-      request.id,
-      request.email,
-      request.name,
-      request.cohort ?? null,
-      request.note ?? null,
-      request.status,
-      request.createdAt,
-      request.updatedAt,
-    ],
-  );
+  return db.transaction(async (tx) => {
+    const coupon = await tx.one<CouponCodeRow>(
+      `
+        SELECT id, code, valid_days, max_uses, status, created_at, updated_at
+        FROM coupon_codes
+        WHERE code = ?
+        LIMIT 1
+      `,
+      [couponCode],
+    );
 
-  return request;
+    if (!coupon || coupon.status !== "active") {
+      throw new Error("COUPON_NOT_FOUND");
+    }
+
+    const redeemedRow = await tx.one<{ count: number | string }>(
+      "SELECT COUNT(*) AS count FROM coupon_redemptions WHERE coupon_id = ?",
+      [coupon.id],
+    );
+    const redeemedCount = Number(redeemedRow?.count ?? 0);
+
+    if (redeemedCount >= Number(coupon.max_uses)) {
+      throw new Error("COUPON_EXHAUSTED");
+    }
+
+    let approvedAccountId: string;
+    const expiresAt = computeCouponExpiry(Number(coupon.valid_days));
+
+    if (approved) {
+      approvedAccountId = approved.id;
+      await tx.run(
+        `
+          UPDATE approved_accounts
+          SET name = ?, cohort = ?, status = 'approved', expires_at = ?, updated_at = ?
+          WHERE id = ?
+        `,
+        [name, normalizeOptionalText(input.cohort), expiresAt, now, approved.id],
+      );
+    } else {
+      approvedAccountId = randomUUID();
+      await tx.run(
+        `
+          INSERT INTO approved_accounts (
+            id, email, name, cohort, status, expires_at, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, 'approved', ?, ?, ?)
+        `,
+        [
+          approvedAccountId,
+          email,
+          name,
+          normalizeOptionalText(input.cohort),
+          expiresAt,
+          now,
+          now,
+        ],
+      );
+    }
+
+    const signupRequestId = pending?.id ?? randomUUID();
+
+    if (pending) {
+      await tx.run(
+        `
+          UPDATE signup_requests
+          SET name = ?, cohort = ?, coupon = ?, note = ?, status = 'approved', updated_at = ?
+          WHERE id = ?
+        `,
+        [
+          name,
+          normalizeOptionalText(input.cohort),
+          couponCode,
+          normalizeOptionalText(input.note),
+          now,
+          signupRequestId,
+        ],
+      );
+    } else {
+      await tx.run(
+        `
+          INSERT INTO signup_requests (
+            id, email, name, cohort, coupon, note, status, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, 'approved', ?, ?)
+        `,
+        [
+          signupRequestId,
+          email,
+          name,
+          normalizeOptionalText(input.cohort),
+          couponCode,
+          normalizeOptionalText(input.note),
+          now,
+          now,
+        ],
+      );
+    }
+
+    await tx.run(
+      `
+        INSERT INTO coupon_redemptions (
+          id, coupon_id, email, approved_account_id, signup_request_id, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?)
+      `,
+      [randomUUID(), coupon.id, email, approvedAccountId, signupRequestId, now],
+    );
+
+    const updated = await tx.one<SignupRequestRow>(
+      `
+        SELECT id, email, name, cohort, coupon, note, status, created_at, updated_at
+        FROM signup_requests
+        WHERE id = ?
+        LIMIT 1
+      `,
+      [signupRequestId],
+    );
+
+    if (!updated) {
+      throw new Error("UNKNOWN_ERROR");
+    }
+
+    return mapSignupRequest(updated);
+  });
 }
 
 export async function findApprovedAccountsByEmails(emails: string[]) {
@@ -482,7 +746,7 @@ export async function reviewSignupRequest(input: {
   const db = await getDb();
   const existing = await db.one<SignupRequestRow>(
     `
-      SELECT id, email, name, cohort, note, status, created_at, updated_at
+      SELECT id, email, name, cohort, coupon, note, status, created_at, updated_at
       FROM signup_requests
       WHERE id = ?
       LIMIT 1
@@ -557,7 +821,7 @@ export async function reviewSignupRequest(input: {
 
   const updated = await db.one<SignupRequestRow>(
     `
-      SELECT id, email, name, cohort, note, status, created_at, updated_at
+      SELECT id, email, name, cohort, coupon, note, status, created_at, updated_at
       FROM signup_requests
       WHERE id = ?
       LIMIT 1

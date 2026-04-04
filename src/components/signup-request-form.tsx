@@ -13,6 +13,7 @@ export function SignupRequestForm() {
     email: "",
     name: "",
     cohort: "",
+    coupon: "",
     note: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,7 +33,7 @@ export function SignupRequestForm() {
         body: JSON.stringify(form),
       });
 
-      const result = (await response.json()) as { message?: string };
+      const result = (await response.json()) as { message?: string; autoApproved?: boolean };
 
       if (!response.ok) {
         throw new Error(result.message ?? "회원가입 신청에 실패했습니다.");
@@ -42,11 +43,14 @@ export function SignupRequestForm() {
         email: "",
         name: "",
         cohort: "",
+        coupon: "",
         note: "",
       });
       setState({
         status: "success",
-        message: "회원가입 신청이 접수되었습니다. 관리자 승인 후 로그인할 수 있습니다.",
+        message: result.autoApproved
+          ? "쿠폰이 적용되어 바로 사용할 수 있습니다. 이제 로그인해주세요."
+          : "회원가입 신청이 접수되었습니다. 관리자 승인 후 로그인할 수 있습니다.",
       });
     } catch (error) {
       setState({
@@ -92,6 +96,16 @@ export function SignupRequestForm() {
           type="text"
           value={form.cohort}
           onChange={(event) => setForm((prev) => ({ ...prev, cohort: event.target.value }))}
+        />
+      </label>
+
+      <label>
+        쿠폰
+        <input
+          type="text"
+          value={form.coupon}
+          onChange={(event) => setForm((prev) => ({ ...prev, coupon: event.target.value }))}
+          placeholder="쿠폰 코드가 있으면 입력해주세요."
         />
       </label>
 

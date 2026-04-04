@@ -110,8 +110,21 @@ export type SignupRequest = {
   email: string;
   name: string;
   cohort?: string;
+  coupon?: string;
   note?: string;
   status: "pending" | "approved" | "rejected";
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CouponCode = {
+  id: string;
+  code: string;
+  validDays: number;
+  maxUses: number;
+  status: "active" | "inactive";
+  redeemedCount: number;
+  remainingUses: number;
   createdAt: string;
   updatedAt: string;
 };

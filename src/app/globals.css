@@ -988,13 +988,17 @@ textarea {
 
 .admin-line-main {
   display: grid;
-  grid-template-columns: minmax(220px, 1.5fr) minmax(110px, 0.7fr) minmax(110px, 0.7fr) minmax(170px, 0.95fr) minmax(170px, 0.95fr) minmax(180px, 1.1fr);
+  grid-template-columns: minmax(220px, 1.4fr) minmax(110px, 0.68fr) minmax(110px, 0.68fr) minmax(110px, 0.68fr) minmax(170px, 0.92fr) minmax(170px, 0.92fr) minmax(180px, 1.05fr);
   gap: 12px;
   align-items: center;
 }
 
 .admin-line-main-accounts {
   grid-template-columns: minmax(260px, 1.4fr) minmax(170px, 0.8fr) minmax(170px, 0.8fr) minmax(130px, 0.72fr) minmax(170px, 0.9fr);
+}
+
+.admin-line-main-coupons {
+  grid-template-columns: minmax(220px, 1.3fr) minmax(110px, 0.7fr) minmax(110px, 0.7fr) minmax(110px, 0.7fr) minmax(110px, 0.7fr) minmax(140px, 0.8fr);
 }
 
 .admin-line-title-block {
@@ -1054,6 +1058,14 @@ textarea {
   border-radius: 14px;
   background: white;
   color: var(--text);
+}
+
+.admin-coupon-form {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.2fr) minmax(140px, 0.7fr) minmax(140px, 0.7fr) auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 18px;
 }
 
 .admin-readiness-list {
@@ -1149,6 +1161,11 @@ textarea {
 
   .admin-line-main,
   .admin-line-main-accounts {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-line-main-coupons,
+  .admin-coupon-form {
     grid-template-columns: 1fr;
   }
 

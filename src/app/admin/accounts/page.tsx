@@ -1,8 +1,14 @@
 import { redirect } from "next/navigation";
 
 import { ApprovedAccountsManager } from "@/components/approved-accounts-manager";
+import { CouponCodesManager } from "@/components/coupon-codes-manager";
 import { SignupRequestsManager } from "@/components/signup-requests-manager";
-import { listActiveSessions, listApprovedAccounts, listSignupRequests } from "@/server/access-service";
+import {
+  listActiveSessions,
+  listApprovedAccounts,
+  listCouponCodes,
+  listSignupRequests,
+} from "@/server/access-service";
 import { requireAdminSession } from "@/server/admin-auth";
 import { getAdminOverviewMetrics } from "@/server/admin-dashboard-service";
 import { getDeploymentReadiness } from "@/server/deployment-readiness-service";
@@ -17,11 +23,12 @@ export default async function AdminAccountsPage() {
     redirect(message === "UNAUTHORIZED" ? "/login" : "/");
   }
 
-  const [accounts, overview, sessions, signupRequests] = await Promise.all([
+  const [accounts, overview, sessions, signupRequests, coupons] = await Promise.all([
     listApprovedAccounts(),
     getAdminOverviewMetrics(),
     listActiveSessions(),
     listSignupRequests(),
+    listCouponCodes(),
   ]);
   const readiness = await getDeploymentReadiness({
     approvedAccountCount: accounts.length,
@@ -29,6 +36,7 @@ export default async function AdminAccountsPage() {
 
   return (
     <>
+      <CouponCodesManager initialCoupons={coupons} />
       <SignupRequestsManager initialSignupRequests={signupRequests} />
       <ApprovedAccountsManager
         currentSessionId={auth.session.id}

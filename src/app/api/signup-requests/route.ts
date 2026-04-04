@@ -15,6 +15,12 @@ function getSignupErrorMessage(message: string) {
   if (message === "SIGNUP_REQUEST_ALREADY_PENDING") {
     return "이미 가입 신청이 접수되어 있습니다. 관리자 승인을 기다려주세요.";
   }
+  if (message === "COUPON_NOT_FOUND") {
+    return "사용할 수 없는 쿠폰입니다.";
+  }
+  if (message === "COUPON_EXHAUSTED") {
+    return "해당 쿠폰은 사용 가능한 인원이 모두 소진되었습니다.";
+  }
 
   return "가입 신청에 실패했습니다.";
 }
@@ -25,6 +31,7 @@ export async function POST(request: Request) {
       email?: string;
       name?: string;
       cohort?: string | null;
+      coupon?: string | null;
       note?: string | null;
     };
 
@@ -32,10 +39,14 @@ export async function POST(request: Request) {
       email: body.email ?? "",
       name: body.name ?? "",
       cohort: body.cohort,
+      coupon: body.coupon,
       note: body.note,
     });
 
-    return NextResponse.json({ signupRequest }, { status: 201 });
+    return NextResponse.json(
+      { signupRequest, autoApproved: signupRequest.status === "approved" },
+      { status: 201 },
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : "UNKNOWN_ERROR";
     const status = [
@@ -43,6 +54,8 @@ export async function POST(request: Request) {
       "NAME_REQUIRED",
       "ACCOUNT_ALREADY_APPROVED",
       "SIGNUP_REQUEST_ALREADY_PENDING",
+      "COUPON_NOT_FOUND",
+      "COUPON_EXHAUSTED",
     ].includes(message)
       ? 400
       : 500;

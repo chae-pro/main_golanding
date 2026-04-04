@@ -242,6 +242,13 @@ async function ensureVisitorSessionViewportColumns(db: DbClient) {
   );
 }
 
+async function ensureSignupRequestCouponColumn(db: DbClient) {
+  await execIgnoreAlreadyExists(
+    db,
+    "ALTER TABLE signup_requests ADD COLUMN coupon TEXT",
+  );
+}
+
 async function seedApprovedAccounts(db: DbExecutor) {
   const seedPath = path.join(process.cwd(), "data", "approved-users.json");
   const seed = parseJsonFile<ApprovedAccount[]>(seedPath, []);
@@ -478,6 +485,7 @@ async function initializeSqliteClient() {
   const client = createSqliteExecutor(db);
   await client.exec(readFileSync(SQLITE_MIGRATION_PATH, "utf8"));
   await ensureVisitorSessionViewportColumns(client);
+  await ensureSignupRequestCouponColumn(client);
   await seedDatabase(client);
   return client;
 }
@@ -485,6 +493,7 @@ async function initializeSqliteClient() {
 async function initializePostgresClient() {
   const client = createPostgresClient(getPgPool());
   await client.exec(readFileSync(POSTGRES_MIGRATION_PATH, "utf8"));
+  await ensureSignupRequestCouponColumn(client);
   await seedDatabase(client);
   return client;
 }

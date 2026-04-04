@@ -110,6 +110,7 @@ export function SignupRequestsManager({
                   </div>
 
                   <div className="admin-line-info">{request.cohort || "-"}</div>
+                  <div className="admin-line-info">{request.coupon || "-"}</div>
                   <div className="admin-line-info">{getSignupStatusLabel(request.status)}</div>
                   <div className="admin-line-info">
                     {new Date(request.createdAt).toLocaleString("ko-KR")}
