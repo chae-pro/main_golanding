@@ -6,6 +6,7 @@ import { useState } from "react";
 type DashboardLandingRow = {
   id: string;
   title: string;
+  createdAt: string;
   typeLabel: string;
   statusLabel: string;
   publicSlug: string;
@@ -89,6 +90,7 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
         landing?: {
           id: string;
           title: string;
+          createdAt: string;
           type: "button" | "form" | "html";
           status: "draft" | "published" | "archived";
           publicSlug: string;
@@ -120,6 +122,7 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
         {
           id: landing.id,
           title: landing.title,
+          createdAt: landing.createdAt,
           typeLabel,
           statusLabel,
           publicSlug: landing.publicSlug,
@@ -139,9 +142,14 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
     <div className="dashboard-landing-list">
       {rows.map((item) => (
         <article className="dashboard-landing-bar" key={item.id}>
-          <Link className="dashboard-landing-title" href={`/landings/${item.id}`}>
-            {item.title}
-          </Link>
+          <div className="dashboard-landing-title-block">
+            <Link className="dashboard-landing-title" href={`/landings/${item.id}`}>
+              {item.title}
+            </Link>
+            <span className="dashboard-landing-created-at">
+              생성일 {new Date(item.createdAt).toLocaleDateString("ko-KR")}
+            </span>
+          </div>
 
           <div className="dashboard-landing-info">{item.typeLabel}</div>
 

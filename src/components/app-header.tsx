@@ -22,7 +22,6 @@ export function AppHeader({
     <header className="app-header">
       <div className="brand">
         <h1>고랜딩</h1>
-        <p>랜딩 제작부터 히트맵, 스크롤맵, 체류맵 분석까지 한 곳에서 관리하세요.</p>
       </div>
 
       <nav className="header-nav">

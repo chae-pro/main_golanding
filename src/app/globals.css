@@ -237,6 +237,19 @@ textarea {
   color: #07111f;
 }
 
+.dashboard-landing-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.dashboard-landing-created-at {
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
 .dashboard-landing-info {
   font-size: 1.02rem;
   font-weight: 800;

@@ -49,10 +49,6 @@ export default async function HomePage() {
         <div className="panel hero-copy">
           <span className="eyebrow">고랜딩</span>
           <h2>랜딩 제작과 성과 분석을 한 화면에서 시작하세요.</h2>
-          <p>
-            로그인, 랜딩 초안 생성, 랜딩 목록 관리, 클릭 히트맵, 스크롤맵, 20등분 기준
-            체류맵 분석까지 바로 사용할 수 있습니다.
-          </p>
           <div className="link-row">
             <Link className="primary-button primary-button-wide" href={auth ? "/landings/new" : "/login"}>
               {auth ? "랜딩 만들기" : "로그인"}
@@ -99,11 +95,6 @@ export default async function HomePage() {
         <div className="section-heading">
           <span className="eyebrow">랜딩 목록</span>
           <h2>{auth ? "생성된 랜딩페이지" : "로그인 후 생성된 랜딩페이지를 확인할 수 있습니다"}</h2>
-          <p>
-            {auth
-              ? "현재 로그인한 계정 기준으로 내 랜딩만 표시됩니다."
-              : "로그인 전에는 랜딩 관리와 분석 기능이 숨겨집니다."}
-          </p>
         </div>
 
         {auth ? (
@@ -112,6 +103,7 @@ export default async function HomePage() {
               items={landingMetrics.map(({ landing, metrics }) => ({
                 id: landing.id,
                 title: landing.title,
+                createdAt: landing.createdAt,
                 typeLabel: getLandingTypeLabel(landing.type),
                 statusLabel: getLandingStatusLabel(landing.status),
                 publicSlug: landing.publicSlug,
