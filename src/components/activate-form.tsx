@@ -11,7 +11,7 @@ type LoginState =
 
 export function ActivateForm() {
   const router = useRouter();
-  const [email, setEmail] = useState("classdemo@example.com");
+  const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [state, setState] = useState<LoginState>({ status: "idle" });
 
@@ -66,7 +66,13 @@ export function ActivateForm() {
 
       <label>
         승인된 이메일
-        <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" required />
+        <input
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          type="email"
+          placeholder="name@example.com"
+          required
+        />
       </label>
 
       <button className="primary-button" disabled={isSubmitting} type="submit">
@@ -75,7 +81,7 @@ export function ActivateForm() {
 
       <div className="link-row">
         <Link className="ghost-button" href="/signup">
-          가입 신청하기
+          회원가입하기
         </Link>
       </div>
 
