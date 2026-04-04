@@ -353,6 +353,89 @@ export async function createCouponCode(input: {
   return coupon;
 }
 
+export async function updateCouponCode(input: {
+  couponId: string;
+  validDays: number;
+  maxUses: number;
+}) {
+  const db = await getDb();
+  const validDays = Number(input.validDays);
+  const maxUses = Number(input.maxUses);
+
+  if (!Number.isInteger(validDays) || validDays <= 0) {
+    throw new Error("COUPON_VALID_DAYS_INVALID");
+  }
+
+  if (!Number.isInteger(maxUses) || maxUses <= 0) {
+    throw new Error("COUPON_MAX_USES_INVALID");
+  }
+
+  const existing = await db.one<CouponCodeRow>(
+    `
+      SELECT
+        c.id,
+        c.code,
+        c.valid_days,
+        c.max_uses,
+        c.status,
+        c.created_at,
+        c.updated_at,
+        COUNT(r.id) AS redeemed_count
+      FROM coupon_codes c
+      LEFT JOIN coupon_redemptions r ON r.coupon_id = c.id
+      WHERE c.id = ?
+      GROUP BY c.id, c.code, c.valid_days, c.max_uses, c.status, c.created_at, c.updated_at
+      LIMIT 1
+    `,
+    [input.couponId],
+  );
+
+  if (!existing) {
+    throw new Error("COUPON_NOT_FOUND");
+  }
+
+  const redeemedCount = Number(existing.redeemed_count ?? 0);
+
+  if (maxUses < redeemedCount) {
+    throw new Error("COUPON_MAX_USES_BELOW_REDEEMED");
+  }
+
+  await db.run(
+    `
+      UPDATE coupon_codes
+      SET valid_days = ?, max_uses = ?, updated_at = ?
+      WHERE id = ?
+    `,
+    [validDays, maxUses, nowIso(), input.couponId],
+  );
+
+  const updated = await db.one<CouponCodeRow>(
+    `
+      SELECT
+        c.id,
+        c.code,
+        c.valid_days,
+        c.max_uses,
+        c.status,
+        c.created_at,
+        c.updated_at,
+        COUNT(r.id) AS redeemed_count
+      FROM coupon_codes c
+      LEFT JOIN coupon_redemptions r ON r.coupon_id = c.id
+      WHERE c.id = ?
+      GROUP BY c.id, c.code, c.valid_days, c.max_uses, c.status, c.created_at, c.updated_at
+      LIMIT 1
+    `,
+    [input.couponId],
+  );
+
+  if (!updated) {
+    throw new Error("COUPON_NOT_FOUND");
+  }
+
+  return mapCouponCode(updated);
+}
+
 export async function listSignupRequests() {
   const db = await getDb();
   const rows = await db.many<SignupRequestRow>(
