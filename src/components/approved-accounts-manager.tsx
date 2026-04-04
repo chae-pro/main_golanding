@@ -93,12 +93,14 @@ export function ApprovedAccountsManager({
   initialOverview,
   initialReadiness,
   initialSessions,
+  variant = "full",
 }: {
   currentSessionId: string;
   initialAccounts: ApprovedAccount[];
   initialOverview: AdminOverviewMetrics;
   initialReadiness: DeploymentReadiness;
   initialSessions: AdminCreatorSession[];
+  variant?: "full" | "accounts-only";
 }) {
   const router = useRouter();
   const [accounts, setAccounts] = useState(() => initialAccounts.map(mapAccount));
@@ -515,310 +517,314 @@ export function ApprovedAccountsManager({
         </div>
       </section>
 
-      <section className="panel list-panel">
-        <div className="section-heading">
-          <span className="eyebrow">배포 점검</span>
-          <h2>배포 준비 상태</h2>
-          <p>
-            현재 환경: {initialReadiness.environment}. 운영 배포 전에 아래 항목을 확인하세요.
-          </p>
-        </div>
-
-        <div className="note-box">
-          <strong>상태: {initialReadiness.overallStatus.toUpperCase()}</strong>
-          <p>
-            데이터베이스: {initialReadiness.dbProvider} | 스토리지: {initialReadiness.storageProvider}
-          </p>
-        </div>
-
-        <div className="admin-readiness-list">
-          {initialReadiness.checks.map((check) => (
-            <article className={`list-item readiness-item readiness-${check.status}`} key={check.id}>
-              <div className="admin-account-header">
-                <div>
-                  <h3>{check.label}</h3>
-                  <div className="meta-row">
-                    <span>{check.status.toUpperCase()}</span>
-                  </div>
-                </div>
-              </div>
-              <p>{check.detail}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="panel list-panel">
-        <div className="section-heading">
-          <span className="eyebrow">개요</span>
-          <h2>관리자 대시보드 요약</h2>
-          <p>현재 고랜딩 운영 상태를 한눈에 확인할 수 있습니다.</p>
-        </div>
-
-        <div className="metrics-grid admin-summary-grid">
-          <div className="detail-card">
-            <strong>{initialOverview.approvedAccountCount}</strong>
-            <p>승인 계정 수</p>
-          </div>
-          <div className="detail-card">
-            <strong>{initialOverview.activeSessionCount}</strong>
-            <p>활성 세션 수</p>
-          </div>
-          <div className="detail-card">
-            <strong>{initialOverview.publishedLandingCount}</strong>
-            <p>발행된 랜딩 수</p>
-          </div>
-          <div className="detail-card">
-            <strong>{initialOverview.totalLandingCount}</strong>
-            <p>전체 랜딩 수</p>
-          </div>
-          <div className="detail-card">
-            <strong>{initialOverview.recentVisitorCount}</strong>
-            <p>최근 7일 방문 수</p>
-          </div>
-          <div className="detail-card">
-            <strong>{initialOverview.recentFormSubmissionCount}</strong>
-            <p>최근 7일 폼 제출</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="panel form-panel">
-        <div className="section-heading">
-          <span className="eyebrow">관리자</span>
-          <h2>승인된 제작자 계정</h2>
-          <p>어떤 이메일이 고랜딩에 로그인하고 사용할 수 있는지 관리합니다.</p>
-        </div>
-
-        <div className="link-row">
-          <button className="ghost-button" onClick={downloadAccountsCsv} type="button">
-            계정 CSV 내보내기
-          </button>
-        </div>
-
-        <form className="admin-create-form" onSubmit={createAccount}>
-          <div className="grid-two">
-            <label>
-              이메일
-              <input
-                required
-                type="email"
-                value={form.email}
-                onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
-              />
-            </label>
-
-            <label>
-              이름
-              <input
-                required
-                type="text"
-                value={form.name}
-                onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
-              />
-            </label>
-          </div>
-
-          <div className="grid-two">
-            <label>
-              기수
-              <input
-                type="text"
-                value={form.cohort}
-                onChange={(event) => setForm((prev) => ({ ...prev, cohort: event.target.value }))}
-              />
-            </label>
-
-            <label>
-              만료일
-              <input
-                type="date"
-                value={form.expiresAt}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, expiresAt: event.target.value }))
-                }
-              />
-            </label>
-          </div>
-
-          <button className="primary-button" disabled={isCreating} type="submit">
-            {isCreating ? "추가 중..." : "승인 계정 추가"}
-          </button>
-
-          {createState.status !== "idle" ? (
-            <p className={createState.status === "success" ? "status-success" : "status-error"}>
-              {createState.message}
-            </p>
-          ) : null}
-        </form>
-      </section>
-
-      <section className="panel form-panel">
-        <div className="section-heading">
-          <span className="eyebrow">CSV 가져오기</span>
-          <h2>승인 계정 일괄 추가</h2>
-          <p>순서는 email, name, cohort, expiresAt 입니다. 기존 이메일은 덮어쓰지 않고 건너뜁니다.</p>
-        </div>
-
-        <form className="admin-create-form" onSubmit={importCsv}>
-          <label>
-            CSV 파일 불러오기
-            <input
-              accept=".csv,text/csv"
-              type="file"
-              onChange={async (event) => {
-                const file = event.target.files?.[0];
-
-                if (!file) {
-                  return;
-                }
-
-                const text = await file.text();
-                setCsvText(text);
-                event.currentTarget.value = "";
-              }}
-            />
-          </label>
-
-          <label>
-            CSV 내용
-            <textarea
-              placeholder={
-                "email,name,cohort,expiresAt\nstudent1@example.com,홍길동,meta-ads-2026-01,2026-12-31"
-              }
-              rows={8}
-              value={csvText}
-              onChange={(event) => setCsvText(event.target.value)}
-            />
-          </label>
-
-          <button className="primary-button" disabled={isImporting} type="submit">
-            {isImporting ? "가져오는 중..." : "CSV 가져오기"}
-          </button>
-
-          {csvState.status !== "idle" ? (
-            <p className={csvState.status === "success" ? "status-success" : "status-error"}>
-              {csvState.message}
-            </p>
-          ) : null}
-        </form>
-
-        {csvResult ? (
-          <div className="admin-import-results">
-            <div className="metrics-grid">
-              <div className="detail-card">
-                <strong>{csvResult.totalRows}</strong>
-                <p>전체 행 수</p>
-              </div>
-              <div className="detail-card">
-                <strong>{csvResult.createdCount}</strong>
-                <p>추가됨</p>
-              </div>
-              <div className="detail-card">
-                <strong>{csvResult.skippedCount}</strong>
-                <p>건너뜀</p>
-              </div>
-              <div className="detail-card">
-                <strong>{csvResult.errorCount}</strong>
-                <p>오류</p>
-              </div>
+      {variant === "full" ? (
+        <>
+          <section className="panel list-panel">
+            <div className="section-heading">
+              <span className="eyebrow">배포 점검</span>
+              <h2>배포 준비 상태</h2>
+              <p>
+                현재 환경: {initialReadiness.environment}. 운영 배포 전에 아래 항목을 확인하세요.
+              </p>
             </div>
 
-            {csvResult.skipped.length > 0 ? (
-              <div className="note-box">
-                <strong>건너뛴 행</strong>
-                <div className="admin-inline-list">
-                  {csvResult.skipped.map((item) => (
-                    <span key={`${item.rowNumber}-${item.email}`}>
-                      {item.rowNumber}행 {item.email} ({item.reason})
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ) : null}
+            <div className="note-box">
+              <strong>상태: {initialReadiness.overallStatus.toUpperCase()}</strong>
+              <p>
+                데이터베이스: {initialReadiness.dbProvider} | 스토리지: {initialReadiness.storageProvider}
+              </p>
+            </div>
 
-            {csvResult.errors.length > 0 ? (
-              <div className="note-box">
-                <strong>오류 행</strong>
-                <div className="admin-inline-list">
-                  {csvResult.errors.map((item) => (
-                    <span key={`${item.rowNumber}-${item.raw}`}>
-                      {item.rowNumber}행 {item.reason}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </div>
-        ) : null}
-      </section>
-
-      <section className="panel list-panel">
-        <div className="section-heading">
-          <span className="eyebrow">세션</span>
-          <h2>활성 제작자 세션 {sessions.length}건</h2>
-          <p>현재 로그인 중인 사용자를 확인하고 필요하면 즉시 세션을 종료할 수 있습니다.</p>
-        </div>
-
-        <div className="admin-account-list">
-          {sessions.length > 0 ? (
-            sessions.map((session) => {
-              const current = session.id === currentSessionId;
-              const rowStatus = sessionState[session.id];
-
-              return (
-                <article className="list-item" key={session.id}>
+            <div className="admin-readiness-list">
+              {initialReadiness.checks.map((check) => (
+                <article className={`list-item readiness-item readiness-${check.status}`} key={check.id}>
                   <div className="admin-account-header">
                     <div>
-                      <h3>{session.email}</h3>
+                      <h3>{check.label}</h3>
                       <div className="meta-row">
-                        <span>{session.accountName}</span>
-                        {session.cohort ? <span>{session.cohort}</span> : null}
-                        {current ? <span>현재 세션</span> : null}
+                        <span>{check.status.toUpperCase()}</span>
                       </div>
                     </div>
-                    <button
-                      className="ghost-button"
-                      disabled={revokingSessionId === session.id}
-                      onClick={() => void revokeSession(session.id)}
-                      type="button"
-                    >
-                      {revokingSessionId === session.id ? "종료 중..." : "강제 로그아웃"}
-                    </button>
                   </div>
-
-                  <div className="grid-two">
-                    <div className="detail-card">
-                      <strong>{new Date(session.lastValidatedAt).toLocaleString("ko-KR")}</strong>
-                      <p>마지막 확인 시각</p>
-                    </div>
-                    <div className="detail-card">
-                      <strong>{new Date(session.expiresAt).toLocaleString("ko-KR")}</strong>
-                      <p>세션 만료 시각</p>
-                    </div>
-                  </div>
-
-                  <div className="meta-row">
-                    <span>생성 시각 {new Date(session.createdAt).toLocaleString("ko-KR")}</span>
-                    <span>세션 ID {session.id}</span>
-                  </div>
-
-                  {rowStatus && rowStatus.status !== "idle" ? (
-                    <p className={rowStatus.status === "success" ? "status-success" : "status-error"}>
-                      {rowStatus.message}
-                    </p>
-                  ) : null}
+                  <p>{check.detail}</p>
                 </article>
-              );
-            })
-          ) : (
-            <div className="detail-card">
-              <strong>활성 세션이 없습니다</strong>
-              <p>현재 활성 상태인 제작자 세션이 없습니다.</p>
+              ))}
             </div>
-          )}
-        </div>
-      </section>
+          </section>
+
+          <section className="panel list-panel">
+            <div className="section-heading">
+              <span className="eyebrow">개요</span>
+              <h2>관리자 대시보드 요약</h2>
+              <p>현재 고랜딩 운영 상태를 한눈에 확인할 수 있습니다.</p>
+            </div>
+
+            <div className="metrics-grid admin-summary-grid">
+              <div className="detail-card">
+                <strong>{initialOverview.approvedAccountCount}</strong>
+                <p>승인 계정 수</p>
+              </div>
+              <div className="detail-card">
+                <strong>{initialOverview.activeSessionCount}</strong>
+                <p>활성 세션 수</p>
+              </div>
+              <div className="detail-card">
+                <strong>{initialOverview.publishedLandingCount}</strong>
+                <p>발행된 랜딩 수</p>
+              </div>
+              <div className="detail-card">
+                <strong>{initialOverview.totalLandingCount}</strong>
+                <p>전체 랜딩 수</p>
+              </div>
+              <div className="detail-card">
+                <strong>{initialOverview.recentVisitorCount}</strong>
+                <p>최근 7일 방문 수</p>
+              </div>
+              <div className="detail-card">
+                <strong>{initialOverview.recentFormSubmissionCount}</strong>
+                <p>최근 7일 폼 제출</p>
+              </div>
+            </div>
+          </section>
+
+          <section className="panel form-panel">
+            <div className="section-heading">
+              <span className="eyebrow">관리자</span>
+              <h2>승인된 제작자 계정</h2>
+              <p>어떤 이메일이 고랜딩에 로그인하고 사용할 수 있는지 관리합니다.</p>
+            </div>
+
+            <div className="link-row">
+              <button className="ghost-button" onClick={downloadAccountsCsv} type="button">
+                계정 CSV 내보내기
+              </button>
+            </div>
+
+            <form className="admin-create-form" onSubmit={createAccount}>
+              <div className="grid-two">
+                <label>
+                  이메일
+                  <input
+                    required
+                    type="email"
+                    value={form.email}
+                    onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
+                  />
+                </label>
+
+                <label>
+                  이름
+                  <input
+                    required
+                    type="text"
+                    value={form.name}
+                    onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
+                  />
+                </label>
+              </div>
+
+              <div className="grid-two">
+                <label>
+                  기수
+                  <input
+                    type="text"
+                    value={form.cohort}
+                    onChange={(event) => setForm((prev) => ({ ...prev, cohort: event.target.value }))}
+                  />
+                </label>
+
+                <label>
+                  만료일
+                  <input
+                    type="date"
+                    value={form.expiresAt}
+                    onChange={(event) =>
+                      setForm((prev) => ({ ...prev, expiresAt: event.target.value }))
+                    }
+                  />
+                </label>
+              </div>
+
+              <button className="primary-button" disabled={isCreating} type="submit">
+                {isCreating ? "추가 중..." : "승인 계정 추가"}
+              </button>
+
+              {createState.status !== "idle" ? (
+                <p className={createState.status === "success" ? "status-success" : "status-error"}>
+                  {createState.message}
+                </p>
+              ) : null}
+            </form>
+          </section>
+
+          <section className="panel form-panel">
+            <div className="section-heading">
+              <span className="eyebrow">CSV 가져오기</span>
+              <h2>승인 계정 일괄 추가</h2>
+              <p>순서는 email, name, cohort, expiresAt 입니다. 기존 이메일은 덮어쓰지 않고 건너뜁니다.</p>
+            </div>
+
+            <form className="admin-create-form" onSubmit={importCsv}>
+              <label>
+                CSV 파일 불러오기
+                <input
+                  accept=".csv,text/csv"
+                  type="file"
+                  onChange={async (event) => {
+                    const file = event.target.files?.[0];
+
+                    if (!file) {
+                      return;
+                    }
+
+                    const text = await file.text();
+                    setCsvText(text);
+                    event.currentTarget.value = "";
+                  }}
+                />
+              </label>
+
+              <label>
+                CSV 내용
+                <textarea
+                  placeholder={
+                    "email,name,cohort,expiresAt\nstudent1@example.com,홍길동,meta-ads-2026-01,2026-12-31"
+                  }
+                  rows={8}
+                  value={csvText}
+                  onChange={(event) => setCsvText(event.target.value)}
+                />
+              </label>
+
+              <button className="primary-button" disabled={isImporting} type="submit">
+                {isImporting ? "가져오는 중..." : "CSV 가져오기"}
+              </button>
+
+              {csvState.status !== "idle" ? (
+                <p className={csvState.status === "success" ? "status-success" : "status-error"}>
+                  {csvState.message}
+                </p>
+              ) : null}
+            </form>
+
+            {csvResult ? (
+              <div className="admin-import-results">
+                <div className="metrics-grid">
+                  <div className="detail-card">
+                    <strong>{csvResult.totalRows}</strong>
+                    <p>전체 행 수</p>
+                  </div>
+                  <div className="detail-card">
+                    <strong>{csvResult.createdCount}</strong>
+                    <p>추가됨</p>
+                  </div>
+                  <div className="detail-card">
+                    <strong>{csvResult.skippedCount}</strong>
+                    <p>건너뜀</p>
+                  </div>
+                  <div className="detail-card">
+                    <strong>{csvResult.errorCount}</strong>
+                    <p>오류</p>
+                  </div>
+                </div>
+
+                {csvResult.skipped.length > 0 ? (
+                  <div className="note-box">
+                    <strong>건너뛴 행</strong>
+                    <div className="admin-inline-list">
+                      {csvResult.skipped.map((item) => (
+                        <span key={`${item.rowNumber}-${item.email}`}>
+                          {item.rowNumber}행 {item.email} ({item.reason})
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
+                {csvResult.errors.length > 0 ? (
+                  <div className="note-box">
+                    <strong>오류 행</strong>
+                    <div className="admin-inline-list">
+                      {csvResult.errors.map((item) => (
+                        <span key={`${item.rowNumber}-${item.raw}`}>
+                          {item.rowNumber}행 {item.reason}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+          </section>
+
+          <section className="panel list-panel">
+            <div className="section-heading">
+              <span className="eyebrow">세션</span>
+              <h2>활성 제작자 세션 {sessions.length}건</h2>
+              <p>현재 로그인 중인 사용자를 확인하고 필요하면 즉시 세션을 종료할 수 있습니다.</p>
+            </div>
+
+            <div className="admin-account-list">
+              {sessions.length > 0 ? (
+                sessions.map((session) => {
+                  const current = session.id === currentSessionId;
+                  const rowStatus = sessionState[session.id];
+
+                  return (
+                    <article className="list-item" key={session.id}>
+                      <div className="admin-account-header">
+                        <div>
+                          <h3>{session.email}</h3>
+                          <div className="meta-row">
+                            <span>{session.accountName}</span>
+                            {session.cohort ? <span>{session.cohort}</span> : null}
+                            {current ? <span>현재 세션</span> : null}
+                          </div>
+                        </div>
+                        <button
+                          className="ghost-button"
+                          disabled={revokingSessionId === session.id}
+                          onClick={() => void revokeSession(session.id)}
+                          type="button"
+                        >
+                          {revokingSessionId === session.id ? "종료 중..." : "강제 로그아웃"}
+                        </button>
+                      </div>
+
+                      <div className="grid-two">
+                        <div className="detail-card">
+                          <strong>{new Date(session.lastValidatedAt).toLocaleString("ko-KR")}</strong>
+                          <p>마지막 확인 시각</p>
+                        </div>
+                        <div className="detail-card">
+                          <strong>{new Date(session.expiresAt).toLocaleString("ko-KR")}</strong>
+                          <p>세션 만료 시각</p>
+                        </div>
+                      </div>
+
+                      <div className="meta-row">
+                        <span>생성 시각 {new Date(session.createdAt).toLocaleString("ko-KR")}</span>
+                        <span>세션 ID {session.id}</span>
+                      </div>
+
+                      {rowStatus && rowStatus.status !== "idle" ? (
+                        <p className={rowStatus.status === "success" ? "status-success" : "status-error"}>
+                          {rowStatus.message}
+                        </p>
+                      ) : null}
+                    </article>
+                  );
+                })
+              ) : (
+                <div className="detail-card">
+                  <strong>활성 세션이 없습니다</strong>
+                  <p>현재 활성 상태인 제작자 세션이 없습니다.</p>
+                </div>
+              )}
+            </div>
+          </section>
+        </>
+      ) : null}
     </div>
   );
 }

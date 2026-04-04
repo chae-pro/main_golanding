@@ -45,7 +45,7 @@ export function ActivateForm() {
         message: `${new Date(result.session.expiresAt).toLocaleString("ko-KR")}까지 로그인 상태가 유지됩니다.`,
       });
 
-      router.push(result.isAdmin ? "/admin/accounts" : "/");
+      router.push(result.isAdmin ? "/admin/members" : "/");
       router.refresh();
     } catch (error) {
       setState({
