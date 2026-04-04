@@ -59,6 +59,15 @@ type ViewportRange = {
   bottomRatio: number;
 };
 
+export type LandingSessionDebugRow = {
+  sessionId: string;
+  startedAt: string;
+  lastActivityAt: string;
+  validDwellMs: number;
+  maxVisibleSectionIndex: number;
+  topSections: Array<{ section: number; percent: number; ms: number }>;
+};
+
 function nowIso() {
   return new Date().toISOString();
 }
@@ -551,4 +560,42 @@ export async function getLandingAnalysisVisuals(
     scrollSections,
     dwellSections: normalizedSections,
   };
+}
+
+export async function getLandingSessionDebugRows(landingId: string) {
+  const sessions = await listVisitorSessions();
+
+  return sessions
+    .filter((item) => item.landingId === landingId && item.validDwellMs > 0)
+    .slice(0, 20)
+    .map<LandingSessionDebugRow>((session) => {
+      const topSections = session.sectionDwellMs
+        .map((ms, index) => ({
+          section: index + 1,
+          ms: round(ms),
+          percent: session.validDwellMs > 0 ? round((ms / session.validDwellMs) * 100) : 0,
+        }))
+        .filter((item) => item.ms > 0)
+        .sort((a, b) => b.ms - a.ms)
+        .slice(0, 5);
+
+      return {
+        sessionId: session.id,
+        startedAt: session.startedAt,
+        lastActivityAt: session.lastActivityAt,
+        validDwellMs: session.validDwellMs,
+        maxVisibleSectionIndex: session.maxVisibleSectionIndex,
+        topSections,
+      };
+    });
+}
+
+export async function resetLandingAnalytics(landingId: string) {
+  const db = await getDb();
+
+  await db.transaction(async (tx) => {
+    await tx.run("DELETE FROM analytics_events WHERE landing_id = ?", [landingId]);
+    await tx.run("DELETE FROM visitor_sessions WHERE landing_id = ?", [landingId]);
+    await tx.run("DELETE FROM form_submissions WHERE landing_id = ?", [landingId]);
+  });
 }
