@@ -492,7 +492,7 @@ export async function validateSessionToken(token: string) {
       SELECT s.id, s.approved_account_id, s.email, s.token_version, s.expires_at, s.status,
              s.last_validated_at, s.created_at, s.updated_at,
              a.status AS approved_status, a.expires_at AS approved_expires_at
-      FROM creator_sessions
+      FROM creator_sessions s
       INNER JOIN approved_accounts a ON a.id = s.approved_account_id
       WHERE s.id = ?
       LIMIT 1
