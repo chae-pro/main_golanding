@@ -7,7 +7,7 @@ export default async function LoginPage() {
   const auth = await getCurrentCreatorSession();
 
   if (auth) {
-    redirect("/landings/new");
+    redirect("/");
   }
 
   return <ActivateForm />;

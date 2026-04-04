@@ -43,7 +43,7 @@ export function ActivateForm() {
         status: "success",
         message: `${new Date(result.session.expiresAt).toLocaleString()}까지 로그인 상태가 유지됩니다.`,
       });
-      router.push("/landings/new");
+      router.push("/");
       router.refresh();
     } catch (error) {
       setState({
