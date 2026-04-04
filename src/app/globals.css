@@ -298,7 +298,7 @@ textarea {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  min-width: 134px;
+  width: 150px;
   min-height: 48px;
   padding: 0 14px;
   border-radius: 999px;
@@ -335,6 +335,9 @@ textarea {
   font-weight: 900;
   color: #07111f;
   white-space: nowrap;
+  display: inline-flex;
+  justify-content: flex-start;
+  min-width: 56px;
 }
 
 .dashboard-status-toggle:disabled {
