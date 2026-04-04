@@ -571,6 +571,14 @@ export async function getLandingAnalysisVisuals(
   const scrollSections: ScrollSectionMetric[] = Array.from({ length: SECTION_COUNT }, (_, index) => ({
     section: index + 1,
     reachRate: normalizedSections[index],
+    avgDwellSeconds:
+      validSessions.length > 0
+        ? round(
+            validSessions.reduce((sum, item) => sum + item.sectionDwellMs[index], 0) /
+              validSessions.length /
+              1000,
+          )
+        : 0,
     reachedSessionCount: validSessions.filter((item) => item.sectionDwellMs[index] > 0).length,
     totalSessionCount: validSessions.length,
   }));

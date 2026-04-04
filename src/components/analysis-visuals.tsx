@@ -28,6 +28,10 @@ function getDwellOverlayStyle(value: number, index: number) {
   };
 }
 
+function formatSeconds(value: number) {
+  return `${value.toFixed(1)}초`;
+}
+
 export function AnalysisVisuals({
   landing,
   visuals,
@@ -86,9 +90,7 @@ export function AnalysisVisuals({
 
       <section className="list-panel">
         <div className="section-heading">
-          <span className="eyebrow">구간별 체류 그래프</span>
-          <h2>20구간 퍼센트 그래프</h2>
-          <p>오버레이와 같은 기준의 구간별 체류 퍼센트를 막대 그래프로 보여줍니다.</p>
+          <h2>구간별 체류그래프</h2>
         </div>
 
         <div className="scroll-map-list">
@@ -100,6 +102,7 @@ export function AnalysisVisuals({
               </div>
               <div className="scroll-map-meta">
                 <span>{section.reachRate}%</span>
+                <span>{formatSeconds(section.avgDwellSeconds)}</span>
               </div>
             </div>
           ))}
