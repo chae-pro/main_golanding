@@ -50,6 +50,7 @@ export function CouponCodesManager({
   const [rowState, setRowState] = useState<Record<string, SubmitState>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [savingCouponId, setSavingCouponId] = useState<string | null>(null);
+  const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
 
   async function reloadCoupons() {
     const response = await fetch("/api/admin/coupons", {
@@ -71,6 +72,11 @@ export function CouponCodesManager({
         coupon.id === couponId ? { ...coupon, [field]: value } : coupon,
       ),
     );
+  }
+
+  async function cancelEdit() {
+    await reloadCoupons();
+    setEditingCouponId(null);
   }
 
   async function createCoupon(event: React.FormEvent<HTMLFormElement>) {
@@ -143,6 +149,7 @@ export function CouponCodesManager({
       }
 
       await reloadCoupons();
+      setEditingCouponId(null);
       setRowState((previous) => ({
         ...previous,
         [couponId]: { status: "success", message: "저장되었습니다." },
@@ -218,6 +225,7 @@ export function CouponCodesManager({
         {coupons.length > 0 ? (
           coupons.map((coupon) => {
             const couponState = rowState[coupon.id];
+            const isEditing = editingCouponId === coupon.id;
 
             return (
               <article className="admin-line-row" key={coupon.id}>
@@ -227,27 +235,35 @@ export function CouponCodesManager({
                     <span>{coupon.status === "active" ? "사용 가능" : "중지됨"}</span>
                   </div>
 
-                  <label className="admin-inline-field">
-                    <span>기간(일)</span>
-                    <input
-                      min={1}
-                      type="number"
-                      value={coupon.validDays}
-                      onChange={(event) =>
-                        updateCoupon(coupon.id, "validDays", event.target.value)
-                      }
-                    />
-                  </label>
+                  {isEditing ? (
+                    <label className="admin-inline-field">
+                      <span>기간(일)</span>
+                      <input
+                        min={1}
+                        type="number"
+                        value={coupon.validDays}
+                        onChange={(event) =>
+                          updateCoupon(coupon.id, "validDays", event.target.value)
+                        }
+                      />
+                    </label>
+                  ) : (
+                    <div className="admin-line-info">기간 {coupon.validDays}일</div>
+                  )}
 
-                  <label className="admin-inline-field">
-                    <span>가능 인원</span>
-                    <input
-                      min={coupon.redeemedCount}
-                      type="number"
-                      value={coupon.maxUses}
-                      onChange={(event) => updateCoupon(coupon.id, "maxUses", event.target.value)}
-                    />
-                  </label>
+                  {isEditing ? (
+                    <label className="admin-inline-field">
+                      <span>가능 인원</span>
+                      <input
+                        min={coupon.redeemedCount}
+                        type="number"
+                        value={coupon.maxUses}
+                        onChange={(event) => updateCoupon(coupon.id, "maxUses", event.target.value)}
+                      />
+                    </label>
+                  ) : (
+                    <div className="admin-line-info">총 {coupon.maxUses}명</div>
+                  )}
 
                   <div className="admin-line-info">사용 {coupon.redeemedCount}명</div>
                   <div className="admin-line-info">남은 {coupon.remainingUses}명</div>
@@ -257,14 +273,34 @@ export function CouponCodesManager({
                 </div>
 
                 <div className="admin-line-actions">
-                  <button
-                    className="ghost-button admin-line-button"
-                    disabled={savingCouponId === coupon.id}
-                    onClick={() => void saveCoupon(coupon.id)}
-                    type="button"
-                  >
-                    {savingCouponId === coupon.id ? "저장 중..." : "저장"}
-                  </button>
+                  {isEditing ? (
+                    <>
+                      <button
+                        className="ghost-button admin-line-button"
+                        disabled={savingCouponId === coupon.id}
+                        onClick={() => void saveCoupon(coupon.id)}
+                        type="button"
+                      >
+                        {savingCouponId === coupon.id ? "저장 중..." : "저장"}
+                      </button>
+                      <button
+                        className="ghost-button admin-line-button"
+                        disabled={savingCouponId === coupon.id}
+                        onClick={() => void cancelEdit()}
+                        type="button"
+                      >
+                        취소
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      className="ghost-button admin-line-button"
+                      onClick={() => setEditingCouponId(coupon.id)}
+                      type="button"
+                    >
+                      수정
+                    </button>
+                  )}
                 </div>
 
                 {couponState && couponState.status !== "idle" ? (
