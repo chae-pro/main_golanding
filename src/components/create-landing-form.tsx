@@ -198,7 +198,6 @@ export function CreateLandingForm({
   );
   const [state, setState] = useState<FormState>({ status: "idle" });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadingImageIndex, setUploadingImageIndex] = useState<number | null>(null);
 
   function updateType(nextType: LandingType) {
     setType(nextType);
@@ -245,43 +244,6 @@ export function CreateLandingForm({
         moveItem(previous.images, index, direction === "up" ? index - 1 : index + 1),
       ),
     }));
-  }
-
-  async function uploadImageFile(index: number, file: File) {
-    setUploadingImageIndex(index);
-    setState({ status: "idle" });
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await fetch("/api/uploads", {
-        method: "POST",
-        body: formData,
-      });
-
-      const result = (await response.json()) as { message?: string; src?: string };
-      const uploadedSrc = result.src;
-
-      if (!response.ok || !uploadedSrc) {
-        throw new Error(result.message ?? "이미지 업로드에 실패했습니다.");
-      }
-
-      setPayload((previous) => ({
-        ...previous,
-        images: previous.images.map((image, imageIndex) =>
-          imageIndex === index ? { ...image, src: uploadedSrc } : image,
-        ),
-      }));
-      setState({ status: "success", message: `이미지 ${index + 1} 업로드가 완료되었습니다.` });
-    } catch (error) {
-      setState({
-        status: "error",
-        message: error instanceof Error ? error.message : "이미지 업로드에 실패했습니다.",
-      });
-    } finally {
-      setUploadingImageIndex(null);
-    }
   }
 
   function updateButton(index: number, field: keyof EditableButton, value: string | number) {
@@ -533,6 +495,7 @@ export function CreateLandingForm({
           <div>
             <strong>Images</strong>
             <p>이미지는 순서대로 이어져 하나의 긴 랜딩페이지처럼 노출됩니다.</p>
+            <p>현재 운영 버전에서는 이미지 업로드 대신 외부 이미지 URL 입력 방식만 사용합니다.</p>
           </div>
           <button className="ghost-button" onClick={addImage} type="button">
             이미지 추가
@@ -583,22 +546,6 @@ export function CreateLandingForm({
               </label>
 
               <label>
-                이미지 파일 업로드
-                <input
-                  accept="image/png,image/jpeg,image/webp,image/gif"
-                  disabled={uploadingImageIndex === index}
-                  type="file"
-                  onChange={(event) => {
-                    const selectedFile = event.target.files?.[0];
-                    if (selectedFile) {
-                      void uploadImageFile(index, selectedFile);
-                    }
-                    event.currentTarget.value = "";
-                  }}
-                />
-              </label>
-
-              <label>
                 대체 텍스트
                 <input
                   type="text"
@@ -611,10 +558,6 @@ export function CreateLandingForm({
                 <div className="image-preview-card">
                   <img alt={image.alt || `Preview ${index + 1}`} className="image-preview" src={image.src} />
                 </div>
-              ) : null}
-
-              {uploadingImageIndex === index ? (
-                <p className="status-success">이미지 업로드 중...</p>
               ) : null}
             </div>
           ))}
