@@ -104,6 +104,17 @@ export type AdminCreatorSession = CreatorSession & {
   cohort?: string;
 };
 
+export type SignupRequest = {
+  id: string;
+  email: string;
+  name: string;
+  cohort?: string;
+  note?: string;
+  status: "pending" | "approved" | "rejected";
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type AdminOverviewMetrics = {
   approvedAccountCount: number;
   activeSessionCount: number;

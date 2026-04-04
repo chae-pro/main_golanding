@@ -29,6 +29,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             <nav className="header-nav">
               <Link href="/">홈</Link>
               <Link href="/login">로그인</Link>
+              <Link href="/signup">가입 신청</Link>
               <Link href="/landings/new">랜딩 만들기</Link>
               {isAdmin ? <Link href="/admin">관리자</Link> : null}
               {auth ? <SessionActions email={auth.session.email} /> : null}

@@ -24,6 +24,17 @@ CREATE TABLE IF NOT EXISTS creator_sessions (
   FOREIGN KEY (approved_account_id) REFERENCES approved_accounts(id)
 );
 
+CREATE TABLE IF NOT EXISTS signup_requests (
+  id TEXT PRIMARY KEY,
+  email TEXT NOT NULL,
+  name TEXT NOT NULL,
+  cohort TEXT,
+  note TEXT,
+  status TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS landings (
   id TEXT PRIMARY KEY,
   owner_email TEXT NOT NULL,
@@ -110,6 +121,7 @@ CREATE TABLE IF NOT EXISTS form_submissions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_creator_sessions_email ON creator_sessions(email);
+CREATE INDEX IF NOT EXISTS idx_signup_requests_email ON signup_requests(email);
 CREATE INDEX IF NOT EXISTS idx_landings_owner_email ON landings(owner_email);
 CREATE INDEX IF NOT EXISTS idx_visitor_sessions_landing_id ON visitor_sessions(landing_id);
 CREATE INDEX IF NOT EXISTS idx_analytics_events_landing_id ON analytics_events(landing_id);

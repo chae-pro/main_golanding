@@ -60,14 +60,19 @@ export default async function HomePage() {
             <Link className="primary-button" href={auth ? "/landings/new" : "/login"}>
               {auth ? "첫 랜딩 만들기" : "로그인"}
             </Link>
+            {auth ? null : (
+              <Link className="ghost-button" href="/signup">
+                가입 신청
+              </Link>
+            )}
             {adminAccess ? (
               <Link className="ghost-button" href="/admin">
                 관리자 페이지
               </Link>
             ) : null}
-            {auth ? null : (
+            {auth ? null : !adminAccess ? (
               <span className="session-chip">승인된 이메일만 제작자 기능을 사용할 수 있습니다</span>
-            )}
+            ) : null}
           </div>
         </div>
 

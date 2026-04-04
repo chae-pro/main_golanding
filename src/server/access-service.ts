@@ -5,6 +5,7 @@ import type {
   AdminCreatorSession,
   ApprovedAccount,
   CreatorSession,
+  SignupRequest,
 } from "@/domain/types";
 import { createAccessToken, verifyAccessToken } from "@/lib/token";
 import { buildAdminDisplayName, getConfiguredAdminEmails } from "@/server/admin-config";
@@ -38,6 +39,17 @@ type CreatorSessionRow = {
   approved_expires_at?: string | null;
   approved_name?: string;
   approved_cohort?: string | null;
+};
+
+type SignupRequestRow = {
+  id: string;
+  email: string;
+  name: string;
+  cohort: string | null;
+  note: string | null;
+  status: SignupRequest["status"];
+  created_at: string;
+  updated_at: string;
 };
 
 function nowIso() {
@@ -125,6 +137,19 @@ function mapAdminCreatorSession(row: CreatorSessionRow): AdminCreatorSession {
   };
 }
 
+function mapSignupRequest(row: SignupRequestRow): SignupRequest {
+  return {
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    cohort: row.cohort ?? undefined,
+    note: row.note ?? undefined,
+    status: row.status,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
 async function ensureConfiguredAdminAccounts() {
   const adminEmails = getConfiguredAdminEmails();
 
@@ -192,6 +217,104 @@ export async function listApprovedAccounts() {
   );
 
   return rows.map(mapApprovedAccount);
+}
+
+export async function listSignupRequests() {
+  const db = await getDb();
+  const rows = await db.many<SignupRequestRow>(
+    `
+      SELECT id, email, name, cohort, note, status, created_at, updated_at
+      FROM signup_requests
+      ORDER BY
+        CASE status
+          WHEN 'pending' THEN 0
+          WHEN 'approved' THEN 1
+          ELSE 2
+        END,
+        created_at DESC
+    `,
+  );
+
+  return rows.map(mapSignupRequest);
+}
+
+export async function createSignupRequest(input: {
+  email: string;
+  name: string;
+  cohort?: string | null;
+  note?: string | null;
+}) {
+  await ensureConfiguredAdminAccounts();
+  const email = normalizeEmail(input.email);
+  const name = input.name.trim();
+
+  if (!email) {
+    throw new Error("EMAIL_REQUIRED");
+  }
+
+  if (!name) {
+    throw new Error("NAME_REQUIRED");
+  }
+
+  const db = await getDb();
+  const approved = await db.one<ApprovedAccountRow>(
+    `
+      SELECT id, email, name, cohort, status, expires_at, created_at, updated_at
+      FROM approved_accounts
+      WHERE lower(email) = ?
+      LIMIT 1
+    `,
+    [email],
+  );
+
+  if (approved && isAccountActive(mapApprovedAccount(approved))) {
+    throw new Error("ACCOUNT_ALREADY_APPROVED");
+  }
+
+  const pending = await db.one<SignupRequestRow>(
+    `
+      SELECT id, email, name, cohort, note, status, created_at, updated_at
+      FROM signup_requests
+      WHERE lower(email) = ? AND status = 'pending'
+      LIMIT 1
+    `,
+    [email],
+  );
+
+  if (pending) {
+    throw new Error("SIGNUP_REQUEST_ALREADY_PENDING");
+  }
+
+  const request: SignupRequest = {
+    id: randomUUID(),
+    email,
+    name,
+    cohort: normalizeOptionalText(input.cohort) ?? undefined,
+    note: normalizeOptionalText(input.note) ?? undefined,
+    status: "pending",
+    createdAt: nowIso(),
+    updatedAt: nowIso(),
+  };
+
+  await db.run(
+    `
+      INSERT INTO signup_requests (
+        id, email, name, cohort, note, status, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+    [
+      request.id,
+      request.email,
+      request.name,
+      request.cohort ?? null,
+      request.note ?? null,
+      request.status,
+      request.createdAt,
+      request.updatedAt,
+    ],
+  );
+
+  return request;
 }
 
 export async function findApprovedAccountsByEmails(emails: string[]) {
@@ -350,6 +473,96 @@ export async function updateApprovedAccount(input: {
   }
 
   return updatedAccount;
+}
+
+export async function reviewSignupRequest(input: {
+  requestId: string;
+  action: "approve" | "reject";
+}) {
+  const db = await getDb();
+  const existing = await db.one<SignupRequestRow>(
+    `
+      SELECT id, email, name, cohort, note, status, created_at, updated_at
+      FROM signup_requests
+      WHERE id = ?
+      LIMIT 1
+    `,
+    [input.requestId],
+  );
+
+  if (!existing) {
+    throw new Error("SIGNUP_REQUEST_NOT_FOUND");
+  }
+
+  if (existing.status !== "pending") {
+    throw new Error("SIGNUP_REQUEST_ALREADY_REVIEWED");
+  }
+
+  const updatedAt = nowIso();
+
+  if (input.action === "approve") {
+    await db.transaction(async (tx) => {
+      const approved = await tx.one<ApprovedAccountRow>(
+        `
+          SELECT id, email, name, cohort, status, expires_at, created_at, updated_at
+          FROM approved_accounts
+          WHERE lower(email) = ?
+          LIMIT 1
+        `,
+        [existing.email.toLowerCase()],
+      );
+
+      if (approved) {
+        await tx.run(
+          `
+            UPDATE approved_accounts
+            SET name = ?, cohort = ?, status = 'approved', expires_at = NULL, updated_at = ?
+            WHERE id = ?
+          `,
+          [existing.name, existing.cohort, updatedAt, approved.id],
+        );
+      } else {
+        await tx.run(
+          `
+            INSERT INTO approved_accounts (
+              id, email, name, cohort, status, expires_at, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, 'approved', NULL, ?, ?)
+          `,
+          [randomUUID(), existing.email, existing.name, existing.cohort, updatedAt, updatedAt],
+        );
+      }
+
+      await tx.run(
+        `
+          UPDATE signup_requests
+          SET status = 'approved', updated_at = ?
+          WHERE id = ?
+        `,
+        [updatedAt, input.requestId],
+      );
+    });
+  } else {
+    await db.run(
+      `
+        UPDATE signup_requests
+        SET status = 'rejected', updated_at = ?
+        WHERE id = ?
+      `,
+      [updatedAt, input.requestId],
+    );
+  }
+
+  const updated = await db.one<SignupRequestRow>(
+    `
+      SELECT id, email, name, cohort, note, status, created_at, updated_at
+      FROM signup_requests
+      WHERE id = ?
+      LIMIT 1
+    `,
+    [input.requestId],
+  );
+
+  return updated ? mapSignupRequest(updated) : null;
 }
 
 export async function listSessions() {
