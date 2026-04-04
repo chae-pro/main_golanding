@@ -265,42 +265,47 @@ textarea {
 
 .dashboard-status-toggle {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 6px;
-  min-width: 104px;
-  padding: 0;
-  border: 0;
-  background: transparent;
+  justify-content: center;
+  gap: 10px;
+  min-width: 142px;
+  min-height: 48px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.92);
   cursor: pointer;
 }
 
 .dashboard-status-track {
   position: relative;
-  width: 88px;
-  height: 42px;
+  width: 58px;
+  height: 32px;
   border-radius: 999px;
-  border: 3px solid rgba(38, 73, 141, 0.38);
+  border: 2px solid rgba(38, 73, 141, 0.24);
   background: rgba(255, 255, 255, 0.22);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
 }
 
 .dashboard-status-track::after {
   content: "";
   position: absolute;
-  top: 3px;
-  left: 4px;
-  width: 30px;
-  height: 30px;
+  top: 2px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
   border-radius: 999px;
   background: #ffffff;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
 }
 
 .dashboard-status-toggle strong {
-  font-size: 0.98rem;
+  font-size: 1rem;
   font-weight: 900;
   color: #07111f;
+  white-space: nowrap;
 }
 
 .dashboard-status-toggle:disabled {
@@ -313,7 +318,7 @@ textarea {
 }
 
 .dashboard-status-toggle-on .dashboard-status-track::after {
-  left: 50px;
+  left: 29px;
 }
 
 .dashboard-status-toggle-off .dashboard-status-track {
@@ -321,11 +326,50 @@ textarea {
 }
 
 .dashboard-status-toggle-off .dashboard-status-track::after {
-  left: 4px;
+  left: 3px;
 }
 
 .dashboard-landing-status-label {
   display: none;
+}
+
+.construction-page {
+  min-height: calc(100vh - 80px);
+  display: grid;
+  place-items: center;
+  padding: 24px 0 48px;
+}
+
+.construction-card {
+  width: min(860px, 100%);
+  display: grid;
+  gap: 20px;
+  justify-items: center;
+  padding: 28px;
+  border-radius: 32px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.1);
+}
+
+.construction-image {
+  width: min(100%, 560px);
+  display: block;
+}
+
+.construction-copy {
+  text-align: center;
+}
+
+.construction-copy h1 {
+  margin: 0 0 10px;
+  font-size: 2.8rem;
+}
+
+.construction-copy p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.05rem;
 }
 
 .meta-row {
