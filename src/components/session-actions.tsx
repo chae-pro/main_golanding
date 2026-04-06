@@ -1,10 +1,11 @@
 "use client";
 
 import { useTransition } from "react";
-import { useRouter } from "next/navigation";
+
+import { useNavigationPush } from "@/components/navigation-progress";
 
 export function SessionActions({ email }: { email: string }) {
-  const router = useRouter();
+  const navigation = useNavigationPush();
   const [isPending, startTransition] = useTransition();
 
   async function signOut() {
@@ -13,8 +14,7 @@ export function SessionActions({ email }: { email: string }) {
     });
 
     startTransition(() => {
-      router.push("/login");
-      router.refresh();
+      navigation.push("/login");
     });
   }
 

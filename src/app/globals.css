@@ -46,6 +46,45 @@ textarea {
   padding: 28px 0 60px;
 }
 
+.navigation-progress {
+  position: fixed;
+  inset: 0 auto auto 0;
+  z-index: 1200;
+  width: 100%;
+  height: 3px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.navigation-progress::before {
+  content: "";
+  display: block;
+  width: 32%;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.2), rgba(37, 99, 235, 1));
+  box-shadow: 0 0 16px rgba(37, 99, 235, 0.35);
+  transform: translateX(-120%);
+}
+
+.navigation-progress-active {
+  opacity: 1;
+}
+
+.navigation-progress-active::before {
+  animation: navigation-progress-slide 1s ease-in-out infinite;
+}
+
+@keyframes navigation-progress-slide {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(420%);
+  }
+}
+
 .app-header {
   display: flex;
   justify-content: space-between;

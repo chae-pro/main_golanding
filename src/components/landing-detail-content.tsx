@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { AppLink } from "@/components/navigation-progress";
 import { LandingStatusControls } from "@/components/landing-status-controls";
 import { getLandingById } from "@/server/landing-service";
 
@@ -45,20 +45,20 @@ export async function LandingDetailContent({
         <h2>{landing.title}</h2>
         <p>{landing.description || "아직 설명이 없습니다."}</p>
         <div className="link-row detail-actions">
-          <Link className="ghost-button" href={`/landings/${landing.id}/edit`}>
+          <AppLink className="ghost-button" href={`/landings/${landing.id}/edit`}>
             수정
-          </Link>
-          <Link className="ghost-button" href={`/landings/${landing.id}/submissions`}>
+          </AppLink>
+          <AppLink className="ghost-button" href={`/landings/${landing.id}/submissions`}>
             DB확인하기
-          </Link>
+          </AppLink>
           <LandingStatusControls landingId={landing.id} currentStatus={landing.status} />
           <a className="ghost-button" href={`/api/landings/${landing.id}/submissions`} target="_blank">
             CSV 다운로드
           </a>
           {landing.status === "published" ? (
-            <Link className="ghost-button" href={`/l/${landing.publicSlug}`} target="_blank">
+            <AppLink className="ghost-button" href={`/l/${landing.publicSlug}`} target="_blank">
               공개 페이지 열기
-            </Link>
+            </AppLink>
           ) : null}
         </div>
       </div>

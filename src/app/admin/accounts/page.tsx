@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
 import { ApprovedAccountsManager } from "@/components/approved-accounts-manager";
@@ -6,16 +7,27 @@ import { requireAdminSession } from "@/server/admin-auth";
 import { getAdminOverviewMetrics } from "@/server/admin-dashboard-service";
 import { getDeploymentReadiness } from "@/server/deployment-readiness-service";
 
-export default async function AdminAccountsPage() {
-  let auth;
+function AdminAccountsFallback() {
+  return (
+    <section className="panel list-panel loading-panel">
+      <div className="section-heading">
+        <h2>관리자</h2>
+      </div>
+      <div className="admin-line-list">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div className="admin-line-row loading-row" key={index}>
+            <div className="loading-line loading-line-medium" />
+            <div className="loading-line loading-line-short" />
+            <div className="loading-line loading-line-short" />
+            <div className="loading-pill" />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
 
-  try {
-    auth = await requireAdminSession();
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "FORBIDDEN";
-    redirect(message === "UNAUTHORIZED" ? "/login" : "/");
-  }
-
+async function AdminAccountsContent({ currentSessionId }: { currentSessionId: string }) {
   const [accounts, overview, sessions] = await Promise.all([
     listApprovedAccounts(),
     getAdminOverviewMetrics(),
@@ -27,12 +39,30 @@ export default async function AdminAccountsPage() {
 
   return (
     <ApprovedAccountsManager
-      currentSessionId={auth.session.id}
+      currentSessionId={currentSessionId}
       initialAccounts={accounts}
       initialOverview={overview}
       initialReadiness={readiness}
       initialSessions={sessions}
       variant="admin-only"
     />
+  );
+}
+
+export default async function AdminAccountsPage() {
+  let currentSessionId = "";
+
+  try {
+    const auth = await requireAdminSession();
+    currentSessionId = auth.session.id;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "FORBIDDEN";
+    redirect(message === "UNAUTHORIZED" ? "/login" : "/");
+  }
+
+  return (
+    <Suspense fallback={<AdminAccountsFallback />}>
+      <AdminAccountsContent currentSessionId={currentSessionId} />
+    </Suspense>
   );
 }

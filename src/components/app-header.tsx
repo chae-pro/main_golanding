@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+import { AppLink } from "@/components/navigation-progress";
 import { SessionActions } from "@/components/session-actions";
 
 export function AppHeader({
@@ -44,11 +44,11 @@ export function AppHeader({
       </div>
 
       <nav className="header-nav">
-        <Link href="/">홈</Link>
-        {!email ? <Link href="/login">로그인</Link> : null}
-        {!email ? <Link href="/signup">회원가입</Link> : null}
-        {isAdmin ? <Link href="/admin/accounts">관리자</Link> : null}
-        {isAdmin ? <Link href="/admin/members">회원관리</Link> : null}
+        <AppLink href="/">홈</AppLink>
+        {!email ? <AppLink href="/login">로그인</AppLink> : null}
+        {!email ? <AppLink href="/signup">회원가입</AppLink> : null}
+        {isAdmin ? <AppLink href="/admin/accounts">관리자</AppLink> : null}
+        {isAdmin ? <AppLink href="/admin/members">회원관리</AppLink> : null}
         {email ? <SessionActions email={email} /> : null}
       </nav>
     </header>

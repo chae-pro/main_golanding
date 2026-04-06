@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { AppHeader } from "@/components/app-header";
+import { NavigationProgressProvider } from "@/components/navigation-progress";
 import { isAdminEmail } from "@/server/admin-auth";
 import { getCurrentCreatorSessionSnapshot } from "@/server/session-auth";
 
@@ -18,10 +19,12 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="ko">
       <body>
-        <div className="app-shell">
-          <AppHeader email={auth?.session.email ?? null} isAdmin={isAdmin} />
-          {children}
-        </div>
+        <NavigationProgressProvider>
+          <div className="app-shell">
+            <AppHeader email={auth?.session.email ?? null} isAdmin={isAdmin} />
+            {children}
+          </div>
+        </NavigationProgressProvider>
       </body>
     </html>
   );

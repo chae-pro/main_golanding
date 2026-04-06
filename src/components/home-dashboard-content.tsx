@@ -1,6 +1,5 @@
-import Link from "next/link";
-
 import { DashboardLandingList } from "@/components/dashboard-landing-list";
+import { AppLink } from "@/components/navigation-progress";
 import { getLandingDashboardMetrics } from "@/server/analytics-service";
 import { listLandingSummariesByOwner } from "@/server/landing-service";
 
@@ -53,18 +52,18 @@ export async function HomeDashboardContent({
           <span className="eyebrow">고랜딩</span>
           <h2>랜딩 제작과 성과 분석을 한 화면에서 시작하세요.</h2>
           <div className="link-row">
-            <Link className="primary-button primary-button-wide" href={email ? "/landings/new" : "/login"}>
+            <AppLink className="primary-button primary-button-wide" href={email ? "/landings/new" : "/login"}>
               {email ? "랜딩 만들기" : "로그인"}
-            </Link>
+            </AppLink>
             {email ? null : (
-              <Link className="ghost-button" href="/signup">
+              <AppLink className="ghost-button" href="/signup">
                 회원가입
-              </Link>
+              </AppLink>
             )}
             {adminAccess ? (
-              <Link className="ghost-button" href="/admin">
+              <AppLink className="ghost-button" href="/admin">
                 관리자 페이지
-              </Link>
+              </AppLink>
             ) : null}
           </div>
         </div>

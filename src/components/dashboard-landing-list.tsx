@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+
+import { AppLink } from "@/components/navigation-progress";
 
 type DashboardLandingRow = {
   id: string;
@@ -153,9 +154,9 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
       {rows.map((item) => (
         <article className="dashboard-landing-bar" key={item.id}>
           <div className="dashboard-landing-title-block">
-            <Link className="dashboard-landing-title" href={`/landings/${item.id}`}>
+            <AppLink className="dashboard-landing-title" href={`/landings/${item.id}`}>
               {item.title}
-            </Link>
+            </AppLink>
             <span className="dashboard-landing-created-at">
               생성일 {new Date(item.createdAt).toLocaleDateString("ko-KR")}
             </span>
@@ -187,12 +188,12 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
               : "발행전"}
           </button>
 
-          <Link
+          <AppLink
             className="ghost-button dashboard-inline-button dashboard-inline-button-center"
             href={`/landings/${item.id}/edit`}
           >
             수정
-          </Link>
+          </AppLink>
 
           <button
             className="ghost-button dashboard-inline-button dashboard-inline-button-center"
@@ -203,9 +204,9 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
             {duplicatingId === item.id ? "복사 중" : "복사"}
           </button>
 
-          <Link className="primary-button dashboard-inline-button" href={`/analysis/${item.id}`}>
+          <AppLink className="primary-button dashboard-inline-button" href={`/analysis/${item.id}`}>
             분석
-          </Link>
+          </AppLink>
 
           <button
             className={`dashboard-status-toggle ${
