@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { requireCreatorAuth } from "@/server/creator-auth";
+import { requireCreatorAuthSnapshot } from "@/server/creator-auth";
 import { duplicateLanding } from "@/server/landing-service";
 
 type RouteContext = {
@@ -9,7 +9,7 @@ type RouteContext = {
 
 export async function POST(_request: Request, context: RouteContext) {
   try {
-    const auth = await requireCreatorAuth();
+    const auth = await requireCreatorAuthSnapshot();
     const { landingId } = await context.params;
 
     const landing = await duplicateLanding({

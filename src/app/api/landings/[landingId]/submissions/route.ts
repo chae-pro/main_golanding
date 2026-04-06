@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { listFormSubmissionsByLanding } from "@/server/analytics-service";
-import { requireCreatorAuth } from "@/server/creator-auth";
+import { requireCreatorAuthSnapshot } from "@/server/creator-auth";
 import { getLandingById } from "@/server/landing-service";
 
 type RouteContext = {
@@ -14,7 +14,7 @@ function escapeCsv(value: string) {
 }
 
 export async function GET(_request: Request, context: RouteContext) {
-  const auth = await requireCreatorAuth();
+  const auth = await requireCreatorAuthSnapshot();
   const { landingId } = await context.params;
   const landing = await getLandingById(landingId);
 

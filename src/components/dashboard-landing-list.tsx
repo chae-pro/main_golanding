@@ -24,6 +24,7 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     for (const item of rows) {
@@ -149,6 +150,34 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
     }
   }
 
+  async function deleteRow(row: DashboardLandingRow) {
+    const confirmed = window.confirm(
+      "정말 이 랜딩을 삭제하시겠습니까? 삭제하면 랜딩과 분석 데이터가 모두 제거됩니다.",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingId(row.id);
+
+    try {
+      const response = await fetch(`/api/landings/${row.id}`, {
+        method: "DELETE",
+      });
+
+      const result = (await response.json()) as { message?: string };
+
+      if (!response.ok) {
+        throw new Error(result.message ?? "랜딩 삭제에 실패했습니다.");
+      }
+
+      setRows((current) => current.filter((item) => item.id !== row.id));
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   return (
     <div className="dashboard-landing-list">
       {rows.map((item) => (
@@ -202,6 +231,15 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
             type="button"
           >
             {duplicatingId === item.id ? "복사 중" : "복사"}
+          </button>
+
+          <button
+            className="ghost-button dashboard-inline-button dashboard-inline-button-center"
+            disabled={deletingId === item.id}
+            onClick={() => void deleteRow(item)}
+            type="button"
+          >
+            {deletingId === item.id ? "삭제 중" : "삭제"}
           </button>
 
           <AppLink className="primary-button dashboard-inline-button" href={`/analysis/${item.id}`}>

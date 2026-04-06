@@ -717,3 +717,31 @@ export async function updateLandingFast(input: LandingUpdateInput) {
 
   return { id: input.landingId };
 }
+
+export async function deleteLanding(input: { landingId: string; ownerEmail: string }) {
+  const db = await getDb();
+  const existing = await db.one<{ owner_email: string }>(
+    "SELECT owner_email FROM landings WHERE id = ? LIMIT 1",
+    [input.landingId],
+  );
+
+  if (!existing) {
+    throw new Error("LANDING_NOT_FOUND");
+  }
+
+  if (existing.owner_email.toLowerCase() !== input.ownerEmail.toLowerCase()) {
+    throw new Error("FORBIDDEN");
+  }
+
+  await db.transaction(async (tx) => {
+    await tx.run("DELETE FROM analytics_events WHERE landing_id = ?", [input.landingId]);
+    await tx.run("DELETE FROM visitor_sessions WHERE landing_id = ?", [input.landingId]);
+    await tx.run("DELETE FROM form_submissions WHERE landing_id = ?", [input.landingId]);
+    await tx.run("DELETE FROM landing_images WHERE landing_id = ?", [input.landingId]);
+    await tx.run("DELETE FROM landing_buttons WHERE landing_id = ?", [input.landingId]);
+    await tx.run("DELETE FROM landing_form_fields WHERE landing_id = ?", [input.landingId]);
+    await tx.run("DELETE FROM landings WHERE id = ?", [input.landingId]);
+  });
+
+  return { id: input.landingId };
+}

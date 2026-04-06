@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 import type { LandingCreateInput, LandingFormField, LandingImage } from "@/domain/types";
-import { requireCreatorAuth } from "@/server/creator-auth";
-import { getLandingById, updateLandingFast, updateLandingStatus } from "@/server/landing-service";
+import { requireCreatorAuthSnapshot } from "@/server/creator-auth";
+import { deleteLanding, getLandingById, updateLandingFast, updateLandingStatus } from "@/server/landing-service";
 
 type RouteContext = {
   params: Promise<{ landingId: string }>;
@@ -23,7 +23,7 @@ function normalizeFormFields(fields: LandingFormField[]) {
 }
 
 export async function GET(_request: Request, context: RouteContext) {
-  const auth = await requireCreatorAuth();
+  const auth = await requireCreatorAuthSnapshot();
   const { landingId } = await context.params;
   const landing = await getLandingById(landingId);
 
@@ -40,7 +40,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
 export async function PATCH(request: Request, context: RouteContext) {
   try {
-    const auth = await requireCreatorAuth();
+    const auth = await requireCreatorAuthSnapshot();
     const { landingId } = await context.params;
     const body = (await request.json()) as {
       status?: "draft" | "published" | "archived";
@@ -78,7 +78,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
 export async function PUT(request: Request, context: RouteContext) {
   try {
-    const auth = await requireCreatorAuth();
+    const auth = await requireCreatorAuthSnapshot();
     const { landingId } = await context.params;
     const body = (await request.json()) as LandingCreateInput;
 
@@ -128,6 +128,35 @@ export async function PUT(request: Request, context: RouteContext) {
                 : message === "META_PIXEL_ID_INVALID"
                   ? "메타 픽셀 ID는 숫자만 입력할 수 있습니다."
                   : message,
+      },
+      { status },
+    );
+  }
+}
+
+export async function DELETE(_request: Request, context: RouteContext) {
+  try {
+    const auth = await requireCreatorAuthSnapshot();
+    const { landingId } = await context.params;
+    await deleteLanding({
+      landingId,
+      ownerEmail: auth.session.email,
+    });
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "랜딩 삭제에 실패했습니다.";
+    const status =
+      message === "LANDING_NOT_FOUND" ? 404 : message === "FORBIDDEN" ? 403 : 401;
+
+    return NextResponse.json(
+      {
+        message:
+          message === "LANDING_NOT_FOUND"
+            ? "랜딩을 찾을 수 없습니다."
+            : message === "FORBIDDEN"
+              ? "접근 권한이 없습니다."
+              : message,
       },
       { status },
     );

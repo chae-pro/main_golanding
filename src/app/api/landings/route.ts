@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import type { LandingCreateInput, LandingFormField, LandingImage } from "@/domain/types";
-import { requireCreatorAuth } from "@/server/creator-auth";
+import { requireCreatorAuthSnapshot } from "@/server/creator-auth";
 import { createLandingFast, listLandingsByOwner } from "@/server/landing-service";
 
 function normalizeImages(images: LandingImage[]) {
@@ -19,14 +19,14 @@ function normalizeFormFields(fields: LandingFormField[]) {
 }
 
 export async function GET() {
-  const auth = await requireCreatorAuth();
+  const auth = await requireCreatorAuthSnapshot();
   const landings = await listLandingsByOwner(auth.session.email);
   return NextResponse.json({ landings });
 }
 
 export async function POST(request: Request) {
   try {
-    const auth = await requireCreatorAuth();
+    const auth = await requireCreatorAuthSnapshot();
     const body = (await request.json()) as LandingCreateInput;
 
     if (!body.title || !body.publicSlug || !body.type) {
