@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import type { LandingCreateInput, LandingFormField, LandingImage } from "@/domain/types";
 import { requireCreatorAuth } from "@/server/creator-auth";
-import { createLanding, listLandingsByOwner } from "@/server/landing-service";
+import { createLandingFast, listLandingsByOwner } from "@/server/landing-service";
 
 function normalizeImages(images: LandingImage[]) {
   return images.map((image, index) => ({
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "소유자 이메일이 일치하지 않습니다." }, { status: 403 });
     }
 
-    const landing = await createLanding({
+    const landing = await createLandingFast({
       ...body,
       images: normalizeImages(body.images || []),
       buttons: body.buttons || [],

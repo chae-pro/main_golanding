@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import type { LandingCreateInput, LandingFormField, LandingImage } from "@/domain/types";
 import { requireCreatorAuth } from "@/server/creator-auth";
-import { getLandingById, updateLanding, updateLandingStatus } from "@/server/landing-service";
+import { getLandingById, updateLandingFast, updateLandingStatus } from "@/server/landing-service";
 
 type RouteContext = {
   params: Promise<{ landingId: string }>;
@@ -93,7 +93,7 @@ export async function PUT(request: Request, context: RouteContext) {
       return NextResponse.json({ message: "소유자 이메일이 일치하지 않습니다." }, { status: 403 });
     }
 
-    const landing = await updateLanding({
+    const landing = await updateLandingFast({
       landingId,
       ...body,
       images: normalizeImages(body.images || []),

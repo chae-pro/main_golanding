@@ -390,6 +390,81 @@ export async function createLanding(input: LandingCreateInput) {
   return getLandingById(landingId) as Promise<Landing>;
 }
 
+export async function createLandingFast(input: LandingCreateInput) {
+  const now = new Date().toISOString();
+
+  if (await isPublicSlugTaken(input.publicSlug)) {
+    throw new Error("PUBLIC_SLUG_ALREADY_EXISTS");
+  }
+
+  const db = await getDb();
+  const landingId = randomUUID();
+  const images = sortByOrder(input.images);
+  const buttons = sortByOrder(input.buttons);
+  const fields = sortByOrder(input.formFields);
+  const metaPixelId = normalizeMetaPixelId(input.metaPixelId);
+
+  await db.transaction(async (tx) => {
+    await tx.run(
+      `
+      INSERT INTO landings (
+        id, owner_email, type, title, public_slug, status, description,
+        meta_pixel_id, primary_color, text_color, surface_color, radius, html_source,
+        created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+      [
+        landingId,
+        input.ownerEmail,
+        input.type,
+        input.title,
+        input.publicSlug,
+        "draft",
+        input.description ?? null,
+        metaPixelId,
+        input.theme.primaryColor,
+        input.theme.textColor,
+        input.theme.surfaceColor,
+        input.theme.radius,
+        input.htmlSource?.htmlSource ?? null,
+        now,
+        now,
+      ],
+    );
+
+    for (const image of images) {
+      await tx.run(
+        "INSERT INTO landing_images (id, landing_id, sort_order, src, alt) VALUES (?, ?, ?, ?, ?)",
+        [image.id, landingId, image.sortOrder, image.src, image.alt ?? null],
+      );
+    }
+
+    for (const button of buttons) {
+      await tx.run(
+        "INSERT INTO landing_buttons (id, landing_id, label, href, width_ratio, sort_order) VALUES (?, ?, ?, ?, ?, ?)",
+        [button.id, landingId, button.label, button.href, button.widthRatio, button.sortOrder],
+      );
+    }
+
+    for (const field of fields) {
+      await tx.run(
+        "INSERT INTO landing_form_fields (id, landing_id, field_key, label, placeholder, required, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [
+          field.id,
+          landingId,
+          field.fieldKey,
+          field.label,
+          field.placeholder ?? null,
+          field.required ? 1 : 0,
+          field.sortOrder,
+        ],
+      );
+    }
+  });
+
+  return { id: landingId };
+}
+
 export async function duplicateLanding(input: { landingId: string; ownerEmail: string }) {
   const source = await getLandingById(input.landingId);
 
@@ -556,4 +631,89 @@ export async function updateLanding(input: LandingUpdateInput) {
   });
 
   return getLandingById(input.landingId) as Promise<Landing>;
+}
+
+export async function updateLandingFast(input: LandingUpdateInput) {
+  const db = await getDb();
+  const existing = await db.one<
+    | {
+        owner_email: string;
+      }
+    | undefined
+  >("SELECT owner_email FROM landings WHERE id = ? LIMIT 1", [input.landingId]);
+
+  if (!existing) {
+    throw new Error("LANDING_NOT_FOUND");
+  }
+
+  if (existing.owner_email.toLowerCase() !== input.ownerEmail.toLowerCase()) {
+    throw new Error("FORBIDDEN");
+  }
+
+  const updatedAt = new Date().toISOString();
+  const images = sortByOrder(input.images);
+  const buttons = sortByOrder(input.buttons);
+  const fields = sortByOrder(input.formFields);
+  const metaPixelId = normalizeMetaPixelId(input.metaPixelId);
+
+  await db.transaction(async (tx) => {
+    await tx.run(
+      `
+      UPDATE landings
+      SET type = ?, title = ?, public_slug = ?, description = ?, meta_pixel_id = ?,
+          primary_color = ?, text_color = ?, surface_color = ?, radius = ?,
+          html_source = ?, updated_at = ?
+      WHERE id = ?
+    `,
+      [
+        input.type,
+        input.title,
+        input.publicSlug,
+        input.description ?? null,
+        metaPixelId,
+        input.theme.primaryColor,
+        input.theme.textColor,
+        input.theme.surfaceColor,
+        input.theme.radius,
+        input.htmlSource?.htmlSource ?? null,
+        updatedAt,
+        input.landingId,
+      ],
+    );
+
+    await tx.run("DELETE FROM landing_images WHERE landing_id = ?", [input.landingId]);
+    await tx.run("DELETE FROM landing_buttons WHERE landing_id = ?", [input.landingId]);
+    await tx.run("DELETE FROM landing_form_fields WHERE landing_id = ?", [input.landingId]);
+
+    for (const image of images) {
+      await tx.run(
+        "INSERT INTO landing_images (id, landing_id, sort_order, src, alt) VALUES (?, ?, ?, ?, ?)",
+        [image.id, input.landingId, image.sortOrder, image.src, image.alt ?? null],
+      );
+    }
+
+    for (const button of buttons) {
+      await tx.run(
+        "INSERT INTO landing_buttons (id, landing_id, label, href, width_ratio, sort_order) VALUES (?, ?, ?, ?, ?, ?)",
+        [button.id, input.landingId, button.label, button.href, button.widthRatio, button.sortOrder],
+      );
+    }
+
+    for (const field of fields) {
+      await tx.run(
+        "INSERT INTO landing_form_fields (id, landing_id, field_key, label, placeholder, required, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [
+          field.id,
+          input.landingId,
+          field.fieldKey,
+          field.label,
+          field.placeholder ?? null,
+          field.required ? 1 : 0,
+          field.sortOrder,
+        ],
+      );
+    }
+  });
+
+  return { id: input.landingId };
 }
