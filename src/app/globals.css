@@ -258,7 +258,7 @@ textarea {
 
 .dashboard-landing-bar {
   display: grid;
-  grid-template-columns: minmax(280px, 1.65fr) minmax(104px, 0.56fr) minmax(176px, 0.68fr) repeat(5, minmax(78px, auto)) minmax(128px, auto);
+  grid-template-columns: minmax(280px, 1.65fr) minmax(104px, 0.56fr) minmax(176px, 0.68fr) repeat(5, minmax(72px, auto)) minmax(156px, auto);
   gap: 10px;
   align-items: center;
   padding: 16px 20px;
@@ -326,10 +326,17 @@ textarea {
 }
 
 .dashboard-inline-button {
-  min-width: 78px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
   min-height: 48px;
-  padding: 0 14px;
+  padding: 0 12px;
   font-weight: 800;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  align-self: center;
 }
 
 .dashboard-inline-button-center {
@@ -351,11 +358,11 @@ textarea {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 10px;
-  width: 128px;
+  width: 156px;
   min-height: 48px;
-  padding: 0 14px;
+  padding: 0 12px;
   border-radius: 999px;
   border: 1px solid rgba(15, 23, 42, 0.08);
   background: rgba(255, 255, 255, 0.92);
@@ -386,13 +393,16 @@ textarea {
 }
 
 .dashboard-status-toggle strong {
-  font-size: 1rem;
+  font-size: 0.96rem;
   font-weight: 900;
   color: #07111f;
   white-space: nowrap;
   display: inline-flex;
   justify-content: flex-start;
-  min-width: 56px;
+  align-items: center;
+  min-width: 68px;
+  overflow: hidden;
+  line-height: 1;
 }
 
 .dashboard-status-toggle:disabled {
@@ -426,7 +436,7 @@ textarea {
 }
 
 .dashboard-landing-bar-skeleton {
-  grid-template-columns: minmax(280px, 1.65fr) minmax(104px, 0.56fr) minmax(176px, 0.68fr) repeat(5, minmax(78px, auto)) minmax(128px, auto);
+  grid-template-columns: minmax(280px, 1.65fr) minmax(104px, 0.56fr) minmax(176px, 0.68fr) repeat(5, minmax(72px, auto)) minmax(156px, auto);
 }
 
 .skeleton-line {

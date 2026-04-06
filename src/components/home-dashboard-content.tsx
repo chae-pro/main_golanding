@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { DashboardLandingList } from "@/components/dashboard-landing-list";
 import { AppLink } from "@/components/navigation-progress";
@@ -30,45 +30,92 @@ type DashboardResponse = {
   };
 };
 
-export function HomeDashboardContent({
-  email,
-  adminAccess,
-}: {
-  email: string | null;
-  adminAccess: boolean;
-}) {
-  const [items, setItems] = useState<DashboardLandingItem[]>([]);
-  const [totals, setTotals] = useState({
+const DASHBOARD_CACHE_KEY = "golanding-dashboard-cache-v2";
+let dashboardMemoryCache: DashboardResponse | null = null;
+
+function getGuestTotals() {
+  return {
     landingCount: 0,
     totalVisitors: 0,
     totalClicks: 0,
     totalForms: 0,
-  });
-  const [isLoaded, setIsLoaded] = useState(!email);
+  };
+}
+
+function readCachedDashboard(): DashboardResponse | null {
+  if (dashboardMemoryCache) {
+    return dashboardMemoryCache;
+  }
+
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const cachedRaw = window.sessionStorage.getItem(DASHBOARD_CACHE_KEY);
+
+    if (!cachedRaw) {
+      return null;
+    }
+
+    const cached = JSON.parse(cachedRaw) as DashboardResponse;
+    dashboardMemoryCache = cached;
+    return cached;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedDashboard(data: DashboardResponse) {
+  dashboardMemoryCache = data;
+
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.sessionStorage.setItem(DASHBOARD_CACHE_KEY, JSON.stringify(data));
+}
+
+function clearCachedDashboard() {
+  dashboardMemoryCache = null;
+
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.sessionStorage.removeItem(DASHBOARD_CACHE_KEY);
+}
+
+export function HomeDashboardContent() {
+  const cached = useMemo(readCachedDashboard, []);
+
+  const [email, setEmail] = useState<string | null>(cached?.email ?? null);
+  const [adminAccess, setAdminAccess] = useState(cached?.adminAccess ?? false);
+  const [items, setItems] = useState<DashboardLandingItem[]>(cached?.items ?? []);
+  const [totals, setTotals] = useState(cached?.totals ?? getGuestTotals());
+  const [isLoaded, setIsLoaded] = useState(Boolean(cached));
 
   useEffect(() => {
     let active = true;
-
-    if (!email) {
-      setItems([]);
-      setTotals({
-        landingCount: 0,
-        totalVisitors: 0,
-        totalClicks: 0,
-        totalForms: 0,
-      });
-      setIsLoaded(true);
-      return () => {
-        active = false;
-      };
-    }
-
-    setIsLoaded(false);
 
     void fetch("/api/dashboard", {
       cache: "no-store",
     })
       .then(async (response) => {
+        if (response.status === 401 || response.status === 403) {
+          clearCachedDashboard();
+
+          if (active) {
+            setEmail(null);
+            setAdminAccess(false);
+            setItems([]);
+            setTotals(getGuestTotals());
+            setIsLoaded(true);
+          }
+
+          return null;
+        }
+
         if (!response.ok) {
           throw new Error("DASHBOARD_LOAD_FAILED");
         }
@@ -76,10 +123,13 @@ export function HomeDashboardContent({
         return (await response.json()) as DashboardResponse;
       })
       .then((result) => {
-        if (!active) {
+        if (!active || !result) {
           return;
         }
 
+        writeCachedDashboard(result);
+        setEmail(result.email);
+        setAdminAccess(result.adminAccess);
         setItems(result.items);
         setTotals(result.totals);
         setIsLoaded(true);
@@ -89,20 +139,20 @@ export function HomeDashboardContent({
           return;
         }
 
-        setItems([]);
-        setTotals({
-          landingCount: 0,
-          totalVisitors: 0,
-          totalClicks: 0,
-          totalForms: 0,
-        });
+        if (!cached) {
+          setEmail(null);
+          setAdminAccess(false);
+          setItems([]);
+          setTotals(getGuestTotals());
+        }
+
         setIsLoaded(true);
       });
 
     return () => {
       active = false;
     };
-  }, [email]);
+  }, [cached]);
 
   return (
     <>
@@ -162,7 +212,7 @@ export function HomeDashboardContent({
             ) : (
               <div className="detail-card">
                 <strong>아직 랜딩이 없습니다</strong>
-                <p>첫 랜딩을 만든 뒤 방문, 클릭, 체류 데이터를 확인해보세요.</p>
+                <p>첫 랜딩을 만들고 방문, 클릭, 체류 데이터를 확인해보세요.</p>
               </div>
             )
           ) : (
@@ -190,7 +240,7 @@ export function HomeDashboardContent({
           )
         ) : (
           <div className="detail-card">
-            <strong>로그인 후 시작할 수 있습니다</strong>
+            <strong>로그인 후 사용할 수 있습니다</strong>
             <p>회원가입 또는 로그인 후 랜딩 생성과 분석 기능을 사용할 수 있습니다.</p>
           </div>
         )}
