@@ -735,11 +735,8 @@ export async function deleteLanding(input: { landingId: string; ownerEmail: stri
 
   await db.transaction(async (tx) => {
     await tx.run("DELETE FROM analytics_events WHERE landing_id = ?", [input.landingId]);
-    await tx.run("DELETE FROM visitor_sessions WHERE landing_id = ?", [input.landingId]);
     await tx.run("DELETE FROM form_submissions WHERE landing_id = ?", [input.landingId]);
-    await tx.run("DELETE FROM landing_images WHERE landing_id = ?", [input.landingId]);
-    await tx.run("DELETE FROM landing_buttons WHERE landing_id = ?", [input.landingId]);
-    await tx.run("DELETE FROM landing_form_fields WHERE landing_id = ?", [input.landingId]);
+    await tx.run("DELETE FROM visitor_sessions WHERE landing_id = ?", [input.landingId]);
     await tx.run("DELETE FROM landings WHERE id = ?", [input.landingId]);
   });
 

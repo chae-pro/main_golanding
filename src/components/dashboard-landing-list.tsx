@@ -27,6 +27,10 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
+    setRows(items);
+  }, [items]);
+
+  useEffect(() => {
     for (const item of rows) {
       router.prefetch(`/landings/${item.id}`);
       router.prefetch(`/landings/${item.id}/edit`);
@@ -58,33 +62,40 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
         }),
       });
 
-      const result = (await response.json()) as {
-        landing?: {
-          status: "draft" | "published" | "archived";
-        };
-        message?: string;
-      };
+      const result = (await response.json().catch(() => null)) as
+        | {
+            landing?: {
+              status: "draft" | "published" | "archived";
+            };
+            message?: string;
+          }
+        | null;
 
-      if (!response.ok || !result.landing) {
-        throw new Error(result.message ?? "상태 변경에 실패했습니다.");
+      if (!response.ok || !result?.landing) {
+        throw new Error(result?.message ?? "상태 변경에 실패했습니다.");
       }
+
+      const landing = result.landing;
 
       setRows((current) =>
         current.map((item) =>
           item.id === row.id
             ? {
                 ...item,
-                isPublished: result.landing?.status === "published",
+                isPublished: landing.status === "published",
                 statusLabel:
-                  result.landing?.status === "published"
+                  landing.status === "published"
                     ? "발행중"
-                    : result.landing?.status === "archived"
+                    : landing.status === "archived"
                       ? "사용중지"
                       : "초안",
               }
             : item,
         ),
       );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "상태 변경에 실패했습니다.";
+      window.alert(message);
     } finally {
       setPendingId(null);
     }
@@ -98,21 +109,23 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
         method: "POST",
       });
 
-      const result = (await response.json()) as {
-        landing?: {
-          id: string;
-          title: string;
-          createdAt: string;
-          type: "button" | "form" | "html";
-          status: "draft" | "published" | "archived";
-          publicSlug: string;
-          description?: string;
-        };
-        message?: string;
-      };
+      const result = (await response.json().catch(() => null)) as
+        | {
+            landing?: {
+              id: string;
+              title: string;
+              createdAt: string;
+              type: "button" | "form" | "html";
+              status: "draft" | "published" | "archived";
+              publicSlug: string;
+              description?: string;
+            };
+            message?: string;
+          }
+        | null;
 
-      if (!response.ok || !result.landing) {
-        throw new Error(result.message ?? "랜딩 복사에 실패했습니다.");
+      if (!response.ok || !result?.landing) {
+        throw new Error(result?.message ?? "랜딩 복사에 실패했습니다.");
       }
 
       const landing = result.landing;
@@ -145,6 +158,9 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
         },
         ...current,
       ]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "랜딩 복사에 실패했습니다.";
+      window.alert(message);
     } finally {
       setDuplicatingId(null);
     }
@@ -152,7 +168,7 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
 
   async function deleteRow(row: DashboardLandingRow) {
     const confirmed = window.confirm(
-      "정말 이 랜딩을 삭제하시겠습니까? 삭제하면 랜딩과 분석 데이터가 모두 제거됩니다.",
+      "정말 이 랜딩을 삭제하시겠습니까? 삭제하면 랜딩과 분석 데이터가 모두 삭제됩니다.",
     );
 
     if (!confirmed) {
@@ -166,13 +182,17 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
         method: "DELETE",
       });
 
-      const result = (await response.json()) as { message?: string };
+      const result = (await response.json().catch(() => null)) as { message?: string } | null;
 
       if (!response.ok) {
-        throw new Error(result.message ?? "랜딩 삭제에 실패했습니다.");
+        throw new Error(result?.message ?? "랜딩 삭제에 실패했습니다.");
       }
 
       setRows((current) => current.filter((item) => item.id !== row.id));
+      router.refresh();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "랜딩 삭제에 실패했습니다.";
+      window.alert(message);
     } finally {
       setDeletingId(null);
     }
@@ -210,11 +230,7 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
             onClick={() => (item.isPublished ? void copyPublicLink(item.publicSlug) : undefined)}
             type="button"
           >
-            {item.isPublished
-              ? copiedSlug === item.publicSlug
-                ? "복사됨"
-                : "링크복사"
-              : "발행전"}
+            {item.isPublished ? (copiedSlug === item.publicSlug ? "복사됨" : "링크복사") : "발행전"}
           </button>
 
           <AppLink
@@ -255,17 +271,8 @@ export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }
             type="button"
           >
             <span className="dashboard-status-track" />
-            <strong>
-              {pendingId === item.id ? "변경 중" : item.isPublished ? "사용 중" : "사용중지"}
-            </strong>
+            <strong>{pendingId === item.id ? "변경중" : item.isPublished ? "사용 중" : "사용중지"}</strong>
           </button>
-
-          <div
-            className="dashboard-landing-status-label"
-            aria-hidden="true"
-          >
-            {item.isPublished ? "발행중" : item.statusLabel}
-          </div>
         </article>
       ))}
     </div>
