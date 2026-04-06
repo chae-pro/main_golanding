@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type DashboardLandingRow = {
   id: string;
@@ -17,10 +18,19 @@ type DashboardLandingRow = {
 };
 
 export function DashboardLandingList({ items }: { items: DashboardLandingRow[] }) {
+  const router = useRouter();
   const [rows, setRows] = useState(items);
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    for (const item of rows) {
+      router.prefetch(`/landings/${item.id}`);
+      router.prefetch(`/landings/${item.id}/edit`);
+      router.prefetch(`/analysis/${item.id}`);
+    }
+  }, [router, rows]);
 
   async function copyPublicLink(publicSlug: string) {
     const url = `${window.location.origin}/l/${publicSlug}`;

@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { LandingStatusControls } from "@/components/landing-status-controls";
 import { getLandingById } from "@/server/landing-service";
-import { getCurrentCreatorSession } from "@/server/session-auth";
+import { getCurrentCreatorSessionSnapshot } from "@/server/session-auth";
 
 function getLandingTypeLabel(type: "button" | "form" | "html") {
   if (type === "button") {
@@ -27,7 +27,7 @@ type LandingDetailPageProps = {
 };
 
 export default async function LandingDetailPage({ params }: LandingDetailPageProps) {
-  const auth = await getCurrentCreatorSession();
+  const auth = await getCurrentCreatorSessionSnapshot();
 
   if (!auth) {
     redirect("/login");

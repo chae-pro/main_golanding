@@ -44,6 +44,18 @@ type LandingRow = {
   updated_at: string;
 };
 
+export type LandingSummary = {
+  id: string;
+  ownerEmail: string;
+  type: Landing["type"];
+  title: string;
+  publicSlug: string;
+  status: Landing["status"];
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 function sortByOrder<T extends { sortOrder: number }>(items: T[]) {
   return [...items].sort((a, b) => a.sortOrder - b.sortOrder);
 }
@@ -199,6 +211,20 @@ async function mapLanding(row: LandingRow): Promise<Landing> {
   };
 }
 
+function mapLandingSummary(row: LandingRow): LandingSummary {
+  return {
+    id: row.id,
+    ownerEmail: row.owner_email,
+    type: row.type,
+    title: row.title,
+    publicSlug: row.public_slug,
+    status: row.status,
+    description: row.description ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
 export async function listLandings() {
   const db = await getDb();
   const rows = await db.many<LandingRow>(
@@ -229,6 +255,23 @@ export async function listLandingsByOwner(ownerEmail: string) {
   );
 
   return Promise.all(rows.map(mapLanding));
+}
+
+export async function listLandingSummariesByOwner(ownerEmail: string) {
+  const db = await getDb();
+  const rows = await db.many<LandingRow>(
+    `
+      SELECT id, owner_email, type, title, public_slug, status, description,
+             meta_pixel_id, primary_color, text_color, surface_color, radius, html_source,
+             created_at, updated_at
+      FROM landings
+      WHERE lower(owner_email) = ?
+      ORDER BY created_at DESC
+    `,
+    [ownerEmail.toLowerCase()],
+  );
+
+  return rows.map(mapLandingSummary);
 }
 
 export async function getLandingById(id: string) {

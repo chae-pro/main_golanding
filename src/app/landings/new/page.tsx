@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 
 import { CreateLandingForm } from "@/components/create-landing-form";
-import { getCurrentCreatorSession } from "@/server/session-auth";
+import { getCurrentCreatorSessionSnapshot } from "@/server/session-auth";
 
 export default async function NewLandingPage() {
-  const auth = await getCurrentCreatorSession();
+  const auth = await getCurrentCreatorSessionSnapshot();
 
   if (!auth) {
     redirect("/login");

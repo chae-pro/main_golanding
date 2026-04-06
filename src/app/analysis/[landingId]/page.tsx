@@ -4,7 +4,7 @@ import { AnalysisVisuals } from "@/components/analysis-visuals";
 import { AnalyticsResetButton } from "@/components/analytics-reset-button";
 import { getLandingAnalysisVisuals, getLandingMetrics } from "@/server/analytics-service";
 import { getLandingById } from "@/server/landing-service";
-import { getCurrentCreatorSession } from "@/server/session-auth";
+import { getCurrentCreatorSessionSnapshot } from "@/server/session-auth";
 
 type AnalysisPageProps = {
   params: Promise<{ landingId: string }>;
@@ -15,7 +15,7 @@ function formatSeconds(value: number) {
 }
 
 export default async function AnalysisPage({ params }: AnalysisPageProps) {
-  const auth = await getCurrentCreatorSession();
+  const auth = await getCurrentCreatorSessionSnapshot();
 
   if (!auth) {
     redirect("/login");

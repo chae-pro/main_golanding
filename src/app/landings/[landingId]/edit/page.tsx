@@ -2,14 +2,14 @@ import { notFound, redirect } from "next/navigation";
 
 import { CreateLandingForm } from "@/components/create-landing-form";
 import { getLandingById } from "@/server/landing-service";
-import { getCurrentCreatorSession } from "@/server/session-auth";
+import { getCurrentCreatorSessionSnapshot } from "@/server/session-auth";
 
 type EditLandingPageProps = {
   params: Promise<{ landingId: string }>;
 };
 
 export default async function EditLandingPage({ params }: EditLandingPageProps) {
-  const auth = await getCurrentCreatorSession();
+  const auth = await getCurrentCreatorSessionSnapshot();
 
   if (!auth) {
     redirect("/login");

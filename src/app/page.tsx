@@ -3,8 +3,8 @@ import Link from "next/link";
 import { DashboardLandingList } from "@/components/dashboard-landing-list";
 import { getLandingDashboardMetrics } from "@/server/analytics-service";
 import { isAdminEmail } from "@/server/admin-auth";
-import { listLandingsByOwner } from "@/server/landing-service";
-import { getCurrentCreatorSession } from "@/server/session-auth";
+import { listLandingSummariesByOwner } from "@/server/landing-service";
+import { getCurrentCreatorSessionSnapshot } from "@/server/session-auth";
 
 function getLandingTypeLabel(type: "button" | "form" | "html") {
   if (type === "button") {
@@ -27,9 +27,9 @@ function getLandingStatusLabel(status: "draft" | "published" | "archived") {
 }
 
 export default async function HomePage() {
-  const auth = await getCurrentCreatorSession();
+  const auth = await getCurrentCreatorSessionSnapshot();
   const adminAccess = auth ? isAdminEmail(auth.session.email) : false;
-  const landings = auth ? await listLandingsByOwner(auth.session.email) : [];
+  const landings = auth ? await listLandingSummariesByOwner(auth.session.email) : [];
   const landingMetrics = await getLandingDashboardMetrics(landings.map((landing) => landing.id));
   const totalVisitors = landings.reduce(
     (sum, landing) => sum + (landingMetrics.get(landing.id)?.visitorCount ?? 0),
