@@ -360,8 +360,7 @@ export function CreateLandingForm({
         status: "success",
         message: isEdit ? "랜딩이 수정되었습니다." : "랜딩이 생성되었습니다.",
       });
-      router.push(`/landings/${result.landing.id}`);
-      router.refresh();
+      router.replace("/");
     } catch (error) {
       setState({
         status: "error",

@@ -1,49 +1,108 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 import { DashboardLandingList } from "@/components/dashboard-landing-list";
 import { AppLink } from "@/components/navigation-progress";
-import { getLandingDashboardMetrics } from "@/server/analytics-service";
-import { listLandingSummariesByOwner } from "@/server/landing-service";
 
-function getLandingTypeLabel(type: "button" | "form" | "html") {
-  if (type === "button") {
-    return "버튼형";
-  }
-  if (type === "form") {
-    return "DB 수집형";
-  }
-  return "HTML 삽입형";
-}
+type DashboardLandingItem = {
+  id: string;
+  title: string;
+  createdAt: string;
+  typeLabel: string;
+  statusLabel: string;
+  publicSlug: string;
+  description?: string;
+  visitorCount: number;
+  clickCount: number;
+  isPublished: boolean;
+};
 
-function getLandingStatusLabel(status: "draft" | "published" | "archived") {
-  if (status === "published") {
-    return "사용 중";
-  }
-  if (status === "archived") {
-    return "사용중지";
-  }
-  return "발행전";
-}
+type DashboardResponse = {
+  email: string;
+  adminAccess: boolean;
+  items: DashboardLandingItem[];
+  totals: {
+    landingCount: number;
+    totalVisitors: number;
+    totalClicks: number;
+    totalForms: number;
+  };
+};
 
-export async function HomeDashboardContent({
+export function HomeDashboardContent({
   email,
   adminAccess,
 }: {
   email: string | null;
   adminAccess: boolean;
 }) {
-  const landings = email ? await listLandingSummariesByOwner(email) : [];
-  const landingMetrics = await getLandingDashboardMetrics(landings.map((landing) => landing.id));
-  const totalVisitors = landings.reduce(
-    (sum, landing) => sum + (landingMetrics.get(landing.id)?.visitorCount ?? 0),
-    0,
-  );
-  const totalClicks = landings.reduce(
-    (sum, landing) => sum + (landingMetrics.get(landing.id)?.totalClickCount ?? 0),
-    0,
-  );
-  const totalForms = landings.reduce(
-    (sum, landing) => sum + (landingMetrics.get(landing.id)?.formSubmissionCount ?? 0),
-    0,
-  );
+  const [items, setItems] = useState<DashboardLandingItem[]>([]);
+  const [totals, setTotals] = useState({
+    landingCount: 0,
+    totalVisitors: 0,
+    totalClicks: 0,
+    totalForms: 0,
+  });
+  const [isLoaded, setIsLoaded] = useState(!email);
+
+  useEffect(() => {
+    let active = true;
+
+    if (!email) {
+      setItems([]);
+      setTotals({
+        landingCount: 0,
+        totalVisitors: 0,
+        totalClicks: 0,
+        totalForms: 0,
+      });
+      setIsLoaded(true);
+      return () => {
+        active = false;
+      };
+    }
+
+    setIsLoaded(false);
+
+    void fetch("/api/dashboard", {
+      cache: "no-store",
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error("DASHBOARD_LOAD_FAILED");
+        }
+
+        return (await response.json()) as DashboardResponse;
+      })
+      .then((result) => {
+        if (!active) {
+          return;
+        }
+
+        setItems(result.items);
+        setTotals(result.totals);
+        setIsLoaded(true);
+      })
+      .catch(() => {
+        if (!active) {
+          return;
+        }
+
+        setItems([]);
+        setTotals({
+          landingCount: 0,
+          totalVisitors: 0,
+          totalClicks: 0,
+          totalForms: 0,
+        });
+        setIsLoaded(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [email]);
 
   return (
     <>
@@ -71,19 +130,19 @@ export async function HomeDashboardContent({
         <div className="panel hero-side">
           <div className="hero-metrics">
             <div className="metric-card">
-              <strong>{landings.length}</strong>
+              <strong>{isLoaded ? totals.landingCount : "..."}</strong>
               <p>내 랜딩 수</p>
             </div>
             <div className="metric-card">
-              <strong>{totalVisitors}</strong>
+              <strong>{isLoaded ? totals.totalVisitors : "..."}</strong>
               <p>총 방문자</p>
             </div>
             <div className="metric-card">
-              <strong>{totalClicks}</strong>
+              <strong>{isLoaded ? totals.totalClicks : "..."}</strong>
               <p>총 클릭 수</p>
             </div>
             <div className="metric-card">
-              <strong>{totalForms}</strong>
+              <strong>{isLoaded ? totals.totalForms : "..."}</strong>
               <p>폼 제출 수</p>
             </div>
           </div>
@@ -97,33 +156,36 @@ export async function HomeDashboardContent({
         </div>
 
         {email ? (
-          landings.length > 0 ? (
-            <DashboardLandingList
-              items={landings.map((landing) => {
-                const metrics = landingMetrics.get(landing.id) ?? {
-                  visitorCount: 0,
-                  totalClickCount: 0,
-                  formSubmissionCount: 0,
-                };
-
-                return {
-                  id: landing.id,
-                  title: landing.title,
-                  createdAt: landing.createdAt,
-                  typeLabel: getLandingTypeLabel(landing.type),
-                  statusLabel: getLandingStatusLabel(landing.status),
-                  publicSlug: landing.publicSlug,
-                  description: landing.description,
-                  visitorCount: metrics.visitorCount,
-                  clickCount: metrics.totalClickCount,
-                  isPublished: landing.status === "published",
-                };
-              })}
-            />
+          isLoaded ? (
+            items.length > 0 ? (
+              <DashboardLandingList items={items} />
+            ) : (
+              <div className="detail-card">
+                <strong>아직 랜딩이 없습니다</strong>
+                <p>첫 랜딩을 만든 뒤 방문, 클릭, 체류 데이터를 확인해보세요.</p>
+              </div>
+            )
           ) : (
-            <div className="detail-card">
-              <strong>아직 랜딩이 없습니다</strong>
-              <p>첫 랜딩을 만든 뒤 방문, 클릭, 체류 데이터를 확인해보세요.</p>
+            <div className="dashboard-landing-list">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <article className="dashboard-landing-bar dashboard-landing-bar-skeleton" key={`landing-skeleton-${index}`}>
+                  <div className="dashboard-landing-title-block">
+                    <span className="skeleton-line skeleton-line-title" />
+                    <span className="skeleton-line skeleton-line-sub" />
+                  </div>
+                  <span className="skeleton-line skeleton-line-small" />
+                  <div className="dashboard-landing-metrics">
+                    <span className="skeleton-line skeleton-line-small" />
+                    <span className="skeleton-line skeleton-line-small" />
+                  </div>
+                  <span className="ghost-button dashboard-inline-button dashboard-inline-button-center button-placeholder">로딩</span>
+                  <span className="ghost-button dashboard-inline-button dashboard-inline-button-center button-placeholder">로딩</span>
+                  <span className="ghost-button dashboard-inline-button dashboard-inline-button-center button-placeholder">로딩</span>
+                  <span className="ghost-button dashboard-inline-button dashboard-inline-button-center button-placeholder">로딩</span>
+                  <span className="primary-button dashboard-inline-button button-placeholder">로딩</span>
+                  <span className="dashboard-status-toggle dashboard-status-toggle-off button-placeholder">로딩</span>
+                </article>
+              ))}
             </div>
           )
         ) : (

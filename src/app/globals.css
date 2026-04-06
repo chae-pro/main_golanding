@@ -41,7 +41,7 @@ textarea {
 }
 
 .app-shell {
-  width: min(1380px, calc(100% - 32px));
+  width: min(1500px, calc(100% - 24px));
   margin: 0 auto;
   padding: 28px 0 60px;
 }
@@ -258,8 +258,8 @@ textarea {
 
 .dashboard-landing-bar {
   display: grid;
-  grid-template-columns: minmax(300px, 1.8fr) minmax(130px, 0.72fr) minmax(220px, 0.9fr) auto auto auto auto auto;
-  gap: 14px;
+  grid-template-columns: minmax(280px, 1.65fr) minmax(104px, 0.56fr) minmax(176px, 0.68fr) repeat(5, minmax(78px, auto)) minmax(128px, auto);
+  gap: 10px;
   align-items: center;
   padding: 16px 20px;
   border-radius: 20px;
@@ -302,8 +302,8 @@ textarea {
 
 .dashboard-landing-metrics {
   display: grid;
-  grid-template-columns: minmax(110px, 1fr) minmax(110px, 1fr);
-  gap: 18px;
+  grid-template-columns: minmax(76px, auto) minmax(76px, auto);
+  gap: 12px;
   align-items: center;
 }
 
@@ -326,8 +326,9 @@ textarea {
 }
 
 .dashboard-inline-button {
-  min-width: 96px;
+  min-width: 78px;
   min-height: 48px;
+  padding: 0 14px;
   font-weight: 800;
 }
 
@@ -352,7 +353,7 @@ textarea {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  width: 150px;
+  width: 128px;
   min-height: 48px;
   padding: 0 14px;
   border-radius: 999px;
@@ -425,7 +426,7 @@ textarea {
 }
 
 .dashboard-landing-bar-skeleton {
-  grid-template-columns: minmax(300px, 1.8fr) minmax(130px, 0.72fr) minmax(220px, 0.9fr) auto auto auto auto auto;
+  grid-template-columns: minmax(280px, 1.65fr) minmax(104px, 0.56fr) minmax(176px, 0.68fr) repeat(5, minmax(78px, auto)) minmax(128px, auto);
 }
 
 .skeleton-line {
