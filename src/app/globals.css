@@ -213,6 +213,13 @@ textarea {
   gap: 16px;
 }
 
+.analysis-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
 .hero-metrics,
 .metrics-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1303,7 +1310,8 @@ textarea {
   .grid-two,
   .detail-grid,
   .dwell-grid,
-  .detail-grid-compact {
+  .detail-grid-compact,
+  .analysis-metrics-grid {
     grid-template-columns: 1fr;
   }
 

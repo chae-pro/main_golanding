@@ -36,14 +36,21 @@ export async function LandingAnalysisContent({
       <div className="section-heading">
         <span className="eyebrow">분석</span>
         <h2>{landing.title}</h2>
-        <p>클릭 히트맵, 체류 오버레이, 구간별 체류 퍼센트를 한 화면에서 확인할 수 있습니다.</p>
         <AnalyticsResetButton landingId={landing.id} />
       </div>
 
-      <div className="metrics-grid">
+      <div className="analysis-metrics-grid">
         <div className="detail-card">
           <strong>{metrics.visitorCount}</strong>
           <p>총 방문자</p>
+        </div>
+        <div className="detail-card">
+          <strong>{formatSeconds(metrics.avgDwellSeconds)}</strong>
+          <p>평균 머문 시간</p>
+        </div>
+        <div className="detail-card">
+          <strong>{metrics.avgScrollDepth}%</strong>
+          <p>평균 체류 깊이</p>
         </div>
         <div className="detail-card">
           <strong>{metrics.totalClickCount}</strong>
@@ -56,14 +63,6 @@ export async function LandingAnalysisContent({
         <div className="detail-card">
           <strong>{metrics.formSubmissionCount}</strong>
           <p>폼 제출 수</p>
-        </div>
-        <div className="detail-card">
-          <strong>{metrics.avgScrollDepth}%</strong>
-          <p>평균 본 깊이</p>
-        </div>
-        <div className="detail-card">
-          <strong>{formatSeconds(metrics.avgDwellSeconds)}</strong>
-          <p>평균 머문 시간</p>
         </div>
       </div>
 

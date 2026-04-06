@@ -109,9 +109,28 @@ export function AnalysisVisuals({
     <>
       <section className="list-panel">
         <div className="section-heading">
-          <span className="eyebrow">체류 오버레이 + 클릭 히트맵</span>
+          <h2>구간별 체류그래프</h2>
+        </div>
+
+        <div className="scroll-map-list">
+          {visuals.scrollSections.map((section) => (
+            <div className="scroll-map-row" key={section.section}>
+              <strong>{section.section}구간</strong>
+              <div className="scroll-map-track">
+                <div className="scroll-map-fill" style={{ width: `${section.reachRate}%` }} />
+              </div>
+              <div className="scroll-map-meta">
+                <span className="scroll-map-meta-label">비율</span>
+                <span className="scroll-map-meta-value">{section.reachRate}%</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="list-panel">
+        <div className="section-heading">
           <h2>랜딩 체류 보기</h2>
-          <p>실제 랜딩 이미지 기준 20구간을 나누고, 구간별 체류 퍼센트를 바로 표시합니다.</p>
         </div>
 
         <div className="analysis-preview">
@@ -160,69 +179,46 @@ export function AnalysisVisuals({
             </div>
 
             <div className="analysis-section-summary" aria-hidden="true">
-              {visuals.dwellSections.map((value, index) => (
-                (() => {
-                  const summaryStyle = getDwellSummaryStyle(
-                    dwellRanks[index],
-                    visuals.dwellSections.length,
-                    value > 0 && highestDwellValue > 0,
-                  );
+              {visuals.dwellSections.map((value, index) => {
+                const summaryStyle = getDwellSummaryStyle(
+                  dwellRanks[index],
+                  visuals.dwellSections.length,
+                  value > 0 && highestDwellValue > 0,
+                );
 
-                  return (
-                    <div
-                      className="analysis-section-summary-cell"
-                      key={`${landing.id}-dwell-summary-${index + 1}`}
+                return (
+                  <div
+                    className="analysis-section-summary-cell"
+                    key={`${landing.id}-dwell-summary-${index + 1}`}
+                    style={{
+                      backgroundColor: summaryStyle.backgroundColor,
+                      borderColor: summaryStyle.borderColor,
+                      color: summaryStyle.color,
+                    }}
+                  >
+                    <span
+                      className="analysis-section-summary-label"
                       style={{
-                        backgroundColor: summaryStyle.backgroundColor,
-                        borderColor: summaryStyle.borderColor,
-                        color: summaryStyle.color,
+                        background: summaryStyle.labelBackground,
+                        color: summaryStyle.labelColor,
                       }}
                     >
-                      <span
-                        className="analysis-section-summary-label"
-                        style={{
-                          background: summaryStyle.labelBackground,
-                          color: summaryStyle.labelColor,
-                        }}
-                      >
-                        {index + 1}구간
-                      </span>
-                      <strong
-                        className="analysis-section-summary-value"
-                        style={{
-                          color: summaryStyle.color,
-                          textShadow: summaryStyle.valueShadow,
-                        }}
-                      >
-                        {value}%
-                      </strong>
-                    </div>
-                  );
-                })()
-              ))}
+                      {index + 1}구간
+                    </span>
+                    <strong
+                      className="analysis-section-summary-value"
+                      style={{
+                        color: summaryStyle.color,
+                        textShadow: summaryStyle.valueShadow,
+                      }}
+                    >
+                      {value}%
+                    </strong>
+                  </div>
+                );
+              })}
             </div>
           </div>
-        </div>
-      </section>
-
-      <section className="list-panel">
-        <div className="section-heading">
-          <h2>구간별 체류그래프</h2>
-        </div>
-
-        <div className="scroll-map-list">
-          {visuals.scrollSections.map((section) => (
-            <div className="scroll-map-row" key={section.section}>
-              <strong>{section.section}구간</strong>
-              <div className="scroll-map-track">
-                <div className="scroll-map-fill" style={{ width: `${section.reachRate}%` }} />
-              </div>
-              <div className="scroll-map-meta">
-                <span className="scroll-map-meta-label">비율</span>
-                <span className="scroll-map-meta-value">{section.reachRate}%</span>
-              </div>
-            </div>
-          ))}
         </div>
       </section>
     </>
