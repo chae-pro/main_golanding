@@ -1,31 +1,7 @@
-# 고랜딩
+# 개발문서 안내
 
-고랜딩은 `랜딩 생성 + 랜딩 공개 + 방문자 분석(히트맵/스크롤맵/체류맵)`을 한 곳에서 처리하는 SaaS 프로젝트입니다.
+실제 프로젝트 문서는 아래 파일부터 보면 됩니다.
 
-현재 이 저장소에서 가장 먼저 봐야 할 문서는 아래 4개입니다.
-
-1. [고랜딩_현재구현정리.md](C:/Users/admin/Desktop/민석툴/Project1/main_golanding/고랜딩_현재구현정리.md)
-2. [고랜딩_추가개발가이드.md](C:/Users/admin/Desktop/민석툴/Project1/main_golanding/고랜딩_추가개발가이드.md)
-3. [고랜딩_요구사항정의서_AI전달용.md](C:/Users/admin/Desktop/민석툴/Project1/main_golanding/고랜딩_요구사항정의서_AI전달용.md)
-4. [고랜딩_시스템설계서_AI전달용.md](C:/Users/admin/Desktop/민석툴/Project1/main_golanding/고랜딩_시스템설계서_AI전달용.md)
-
-실행:
-
-```bash
-npm install
-npm run dev
-```
-
-배포/운영 참고:
-
-- [DEPLOYMENT.md](C:/Users/admin/Desktop/민석툴/Project1/main_golanding/DEPLOYMENT.md)
-- [DEPLOYMENT_CHECKLIST.md](C:/Users/admin/Desktop/민석툴/Project1/main_golanding/DEPLOYMENT_CHECKLIST.md)
-- [버셀_수파베이스_배포준비가이드.md](C:/Users/admin/Desktop/민석툴/Project1/main_golanding/버셀_수파베이스_배포준비가이드.md)
-
-현재 운영 전제:
-
-- 앱 호스팅: Vercel
-- 운영 DB: PostgreSQL(Supabase)
-- 개발 기본 DB: SQLite
-- 이미지 업로드 운영 스토리지: 추후 외부 스토리지 연동 권장
-- 현재 실사용 권장 방식: 이미지 URL 입력
+- [개발문서.md](C:/Users/admin/Desktop/민석툴/Project1/main_golanding/개발문서.md)
+- [고랜딩_현재구현정리.md](C:/Users/admin/Desktop/민석툴/Project1/main_golanding/고랜딩_현재구현정리.md)
+- [고랜딩_추가개발가이드.md](C:/Users/admin/Desktop/민석툴/Project1/main_golanding/고랜딩_추가개발가이드.md)
